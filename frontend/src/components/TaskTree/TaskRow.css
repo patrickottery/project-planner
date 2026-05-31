@@ -1,0 +1,99 @@
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-bottom: 1px solid transparent;
+  position: relative;
+  cursor: pointer;
+  min-height: 34px;
+}
+.task-row:hover {
+  background: var(--bg-3);
+}
+.task-row.active {
+  background: rgba(99,102,241,0.12);
+  border-left: 2px solid var(--accent);
+}
+
+.collapse-btn {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.row-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.row-fields {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.editable {
+  display: inline-block;
+  padding: 2px 4px;
+  border-radius: 3px;
+  cursor: text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.editable:hover {
+  background: var(--bg);
+  outline: 1px solid var(--border);
+}
+
+.placeholder {
+  color: var(--text-muted);
+}
+
+.row-actions {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  margin-left: 4px;
+}
+.task-row:hover .row-actions {
+  display: flex;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg-3);
+  border-radius: 10px;
+  padding: 1px 5px;
+}
+
+.delete-menu {
+  position: absolute;
+  right: 8px;
+  top: calc(100% + 4px);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  z-index: 100;
+  min-width: 180px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.delete-menu p {
+  font-size: 12px;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+}
+.delete-menu-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}

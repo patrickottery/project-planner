@@ -1,0 +1,25 @@
+.view-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.view-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+}
+.view-tab:hover {
+  background: var(--bg-3);
+  color: var(--text);
+}
+.view-tab.active {
+  background: var(--bg-3);
+  color: var(--text);
+  border-color: var(--border);
+}

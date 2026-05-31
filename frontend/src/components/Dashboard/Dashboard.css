@@ -1,0 +1,100 @@
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 16px;
+  overflow-y: auto;
+  align-content: start;
+  flex: 1;
+}
+
+.dash-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.dash-card h3 {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.dash-card--wide {
+  grid-column: 1 / -1;
+}
+.dash-card--danger {
+  border-color: rgba(239,68,68,0.3);
+}
+
+.progress-bar-bg {
+  height: 8px;
+  background: var(--bg-3);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: var(--success);
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+.progress-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.status-list { display: flex; flex-direction: column; gap: 8px; }
+.status-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.status-name { flex: 1; text-transform: capitalize; }
+.status-count { font-weight: 600; }
+
+.badge-small {
+  font-size: 11px;
+  font-weight: normal;
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.milestone-list, .overdue-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+.milestone-list li, .overdue-list li {
+  display: flex;
+  gap: 8px;
+}
+.milestone-date { color: var(--accent-hover); min-width: 48px; }
+.overdue-date { color: var(--danger); min-width: 80px; }
+.empty-text { font-size: 13px; color: var(--text-muted); }
+.more { color: var(--text-muted); font-size: 12px; }
+
+.assignee-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.assignee-name { min-width: 100px; }
+.assignee-bar-bg {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.assignee-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+}
+.assignee-count { min-width: 20px; text-align: right; color: var(--text-muted); }

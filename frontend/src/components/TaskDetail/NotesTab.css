@@ -1,0 +1,18 @@
+.notes-tab { display: flex; flex-direction: column; gap: 12px; }
+.note-compose { display: flex; flex-direction: column; gap: 6px; }
+.note-compose textarea { width: 100%; resize: vertical; font-size: 13px; }
+.note-list { display: flex; flex-direction: column; gap: 10px; }
+.note-item {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+}
+.note-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.note-date { font-size: 11px; color: var(--text-muted); }
+.note-actions { display: flex; gap: 2px; }
+.note-body { font-size: 13px; white-space: pre-wrap; line-height: 1.5; }
+.note-edit { display: flex; flex-direction: column; gap: 6px; }
+.note-edit textarea { width: 100%; resize: vertical; }
+.note-edit-actions { display: flex; gap: 6px; }
+.empty-text { font-size: 13px; color: var(--text-muted); }

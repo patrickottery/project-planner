@@ -1,0 +1,8 @@
+.env
+docker-compose.override.yml
+*.log
+__pycache__/
+*.pyc
+.venv/
+app/static/dist/
+frontend/node_modules/

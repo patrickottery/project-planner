@@ -1,0 +1,233 @@
+import React, { useState, useRef, useCallback } from "react";
+import toast from "react-hot-toast";
+import { useStore } from "../../store/useStore";
+import { api } from "../../api";
+import {
+  ChevronRight, ChevronDown, Plus, Trash2, ArrowRight,
+  ArrowLeft, Flag, Layers, CheckCircle2, Circle, Paperclip, FileText
+} from "lucide-react";
+import "./TaskRow.css";
+
+const STATUS_COLOURS = {
+  not_started: "#8892a4",
+  in_progress: "#6366f1",
+  complete: "#22c55e",
+  blocked: "#ef4444",
+  deferred: "#f59e0b",
+};
+
+const STATUS_LABELS = {
+  not_started: "Not Started",
+  in_progress: "In Progress",
+  complete: "Complete",
+  blocked: "Blocked",
+  deferred: "Deferred",
+};
+
+function TypeIcon({ type }) {
+  if (type === "milestone") return <Flag size={13} style={{ color: "#f59e0b" }} />;
+  if (type === "phase") return <Layers size={13} style={{ color: "#8b5cf6" }} />;
+  return <Circle size={13} style={{ color: "#8892a4" }} />;
+}
+
+export default function TaskRow({ task, onAdd, onDelete, isActive, onClick }) {
+  const { collapsed, toggleCollapsed, fetchTasks, activeProjectId } = useStore();
+  const [editingField, setEditingField] = useState(null);
+  const [editValue, setEditValue] = useState("");
+  const [showDeleteMenu, setShowDeleteMenu] = useState(false);
+  const hasChildren = task.children?.length > 0;
+  const isCollapsed = collapsed[task.id];
+
+  const startEdit = (field, value) => {
+    setEditingField(field);
+    setEditValue(value ?? "");
+  };
+
+  async function commitEdit(field, value) {
+    setEditingField(null);
+    let payload = { [field]: value };
+    if (field === "progress_pct") payload[field] = Math.min(100, Math.max(0, parseInt(value) || 0));
+    try {
+      await api.updateTask(task.id, payload);
+      await fetchTasks(activeProjectId);
+    } catch {
+      toast.error("Failed to update");
+    }
+  }
+
+  async function handlePromote(e) {
+    e.stopPropagation();
+    try {
+      await api.promoteTask(task.id);
+      await fetchTasks(activeProjectId);
+    } catch (err) {
+      toast.error(err.message || "Cannot promote");
+    }
+  }
+
+  async function handleDemote(e) {
+    e.stopPropagation();
+    try {
+      await api.demoteTask(task.id);
+      await fetchTasks(activeProjectId);
+    } catch (err) {
+      toast.error(err.message || "Cannot demote");
+    }
+  }
+
+  function InlineEdit({ field, value, type = "text", options, style }) {
+    if (editingField === field) {
+      if (options) {
+        return (
+          <select
+            autoFocus
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={() => commitEdit(field, editValue)}
+            onClick={(e) => e.stopPropagation()}
+            style={style}
+          >
+            {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        );
+      }
+      return (
+        <input
+          autoFocus
+          type={type}
+          value={editValue}
+          style={style}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={() => commitEdit(field, editValue)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commitEdit(field, editValue);
+            if (e.key === "Escape") setEditingField(null);
+          }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      );
+    }
+    return (
+      <span
+        className="editable"
+        style={style}
+        onClick={(e) => { e.stopPropagation(); startEdit(field, value); }}
+        title="Click to edit"
+      >
+        {value || <span className="placeholder">—</span>}
+      </span>
+    );
+  }
+
+  return (
+    <div
+      className={`task-row ${isActive ? "active" : ""}`}
+      style={{ "--depth": task._depth }}
+      onClick={onClick}
+    >
+      <div className="row-indent" style={{ width: task._depth * 20 }} />
+
+      <button
+        className="btn-icon collapse-btn"
+        onClick={(e) => { e.stopPropagation(); if (hasChildren) toggleCollapsed(task.id); }}
+        style={{ visibility: hasChildren ? "visible" : "hidden" }}
+      >
+        {isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+      </button>
+
+      <TypeIcon type={task.task_type} />
+
+      <div className="row-title">
+        <InlineEdit
+          field="title"
+          value={task.title}
+          style={{ minWidth: 120, flex: 1 }}
+        />
+      </div>
+
+      <div className="row-fields">
+        <InlineEdit
+          field="assignee"
+          value={task.assignee}
+          style={{ width: 90 }}
+        />
+
+        <InlineEdit
+          field="start_date"
+          value={task.start_date}
+          type="date"
+          style={{ width: 110 }}
+        />
+
+        <InlineEdit
+          field="end_date"
+          value={task.end_date}
+          type="date"
+          style={{ width: 110 }}
+        />
+
+        <InlineEdit
+          field="effort_hours"
+          value={task.effort_hours}
+          type="number"
+          style={{ width: 55 }}
+        />
+
+        <InlineEdit
+          field="status"
+          value={task.status}
+          options={Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+          style={{ width: 110, color: STATUS_COLOURS[task.status] }}
+        />
+
+        <InlineEdit
+          field="progress_pct"
+          value={task.progress_pct ?? 0}
+          type="number"
+          style={{ width: 45 }}
+        />
+
+        {task.note_count > 0 && (
+          <span className="badge" title="Notes"><FileText size={11} />{task.note_count}</span>
+        )}
+        {task.attachment_count > 0 && (
+          <span className="badge" title="Attachments"><Paperclip size={11} />{task.attachment_count}</span>
+        )}
+      </div>
+
+      <div className="row-actions" onClick={(e) => e.stopPropagation()}>
+        <button className="btn-icon" title="Add child" onClick={() => onAdd(task.id)}>
+          <Plus size={13} />
+        </button>
+        <button className="btn-icon" title="Promote (Shift+Tab)" onClick={handlePromote}>
+          <ArrowLeft size={13} />
+        </button>
+        <button className="btn-icon" title="Demote (Tab)" onClick={handleDemote}>
+          <ArrowRight size={13} />
+        </button>
+        <button
+          className="btn-icon danger"
+          title="Delete"
+          onClick={() => setShowDeleteMenu(true)}
+        >
+          <Trash2 size={13} />
+        </button>
+      </div>
+
+      {showDeleteMenu && (
+        <div className="delete-menu" onClick={(e) => e.stopPropagation()}>
+          <p>Delete children too?</p>
+          <div className="delete-menu-actions">
+            <button className="btn-danger" onClick={() => { setShowDeleteMenu(false); onDelete(task.id, true); }}>
+              Delete all
+            </button>
+            <button className="btn-ghost" onClick={() => { setShowDeleteMenu(false); onDelete(task.id, false); }}>
+              Keep children
+            </button>
+            <button className="btn-ghost" onClick={() => setShowDeleteMenu(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
