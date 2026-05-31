@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod +x /home/patrick/code/project-planner/deploy-dev.sh)",
+      "Bash(mkdir -p /home/patrick/docker/appdata/project-planner-dev)",
+      "Bash(docker compose *)",
+      "Bash(npm install *)",
+      "Bash(curl -s http://localhost:4002/health)",
+      "Bash(curl -s http://localhost:4002/api/v1/projects)",
+      "Bash(curl -s -X POST http://localhost:4002/api/v1/projects -H \"Content-Type: application/json\" -d '{\"name\":\"Test Project\",\"colour\":\"#6366f1\"}')",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s -X POST http://localhost:4002/api/v1/projects/2f8795f6-413b-48a3-a0b9-c1393a9616ae/tasks -H 'Content-Type: application/json' -d '{\"title\":\"Phase 1\",\"task_type\":\"phase\"}')",
+      "Bash(git init *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:4002/)"
+    ]
+  }
+}

@@ -75,6 +75,51 @@
   padding: 1px 5px;
 }
 
+.assignee-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: 0;
+}
+.assignee-avatar.empty {
+  background: var(--bg-3);
+  border: 1px dashed var(--border);
+}
+
+.progress-cell {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.progress-mini-bg {
+  width: 40px;
+  height: 4px;
+  background: var(--bg-3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-mini-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.2s;
+}
+.progress-pct-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.task-row.complete .row-title .editable {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
 .delete-menu {
   position: absolute;
   right: 8px;

@@ -1,0 +1,47 @@
+.export-menu {
+  position: relative;
+}
+
+.export-trigger {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  font-size: 13px;
+}
+
+.export-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  min-width: 160px;
+  z-index: 50;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+
+.export-dropdown button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  text-align: left;
+  color: var(--text);
+  font-size: 13px;
+}
+.export-dropdown button:hover {
+  background: var(--bg-3);
+}
+
+.export-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 2px 0;
+}

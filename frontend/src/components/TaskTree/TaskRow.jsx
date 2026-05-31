@@ -1,10 +1,11 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { useStore } from "../../store/useStore";
 import { api } from "../../api";
+import { assigneeColor, assigneeInitials } from "../../utils/assigneeColors";
 import {
   ChevronRight, ChevronDown, Plus, Trash2, ArrowRight,
-  ArrowLeft, Flag, Layers, CheckCircle2, Circle, Paperclip, FileText
+  ArrowLeft, Flag, Layers, Circle, Paperclip, FileText
 } from "lucide-react";
 import "./TaskRow.css";
 
@@ -30,6 +31,19 @@ function TypeIcon({ type }) {
   return <Circle size={13} style={{ color: "#8892a4" }} />;
 }
 
+function AssigneeAvatar({ name }) {
+  if (!name) return <span className="assignee-avatar empty" />;
+  return (
+    <span
+      className="assignee-avatar"
+      style={{ background: assigneeColor(name) }}
+      title={name}
+    >
+      {assigneeInitials(name)}
+    </span>
+  );
+}
+
 export default function TaskRow({ task, onAdd, onDelete, isActive, onClick }) {
   const { collapsed, toggleCollapsed, fetchTasks, activeProjectId } = useStore();
   const [editingField, setEditingField] = useState(null);
@@ -38,17 +52,17 @@ export default function TaskRow({ task, onAdd, onDelete, isActive, onClick }) {
   const hasChildren = task.children?.length > 0;
   const isCollapsed = collapsed[task.id];
 
-  const startEdit = (field, value) => {
+  function startEdit(field, value) {
     setEditingField(field);
     setEditValue(value ?? "");
-  };
+  }
 
   async function commitEdit(field, value) {
     setEditingField(null);
-    let payload = { [field]: value };
-    if (field === "progress_pct") payload[field] = Math.min(100, Math.max(0, parseInt(value) || 0));
+    let v = value;
+    if (field === "progress_pct") v = Math.min(100, Math.max(0, parseInt(value) || 0));
     try {
-      await api.updateTask(task.id, payload);
+      await api.updateTask(task.id, { [field]: v });
       await fetchTasks(activeProjectId);
     } catch {
       toast.error("Failed to update");
@@ -75,7 +89,7 @@ export default function TaskRow({ task, onAdd, onDelete, isActive, onClick }) {
     }
   }
 
-  function InlineEdit({ field, value, type = "text", options, style }) {
+  function InlineEdit({ field, value, type = "text", options, style, placeholder }) {
     if (editingField === field) {
       if (options) {
         return (
@@ -100,8 +114,8 @@ export default function TaskRow({ task, onAdd, onDelete, isActive, onClick }) {
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={() => commitEdit(field, editValue)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") commitEdit(field, editValue);
-            if (e.key === "Escape") setEditingField(null);
+            if (e.key === "Enter") { e.stopPropagation(); commitEdit(field, editValue); }
+            if (e.key === "Escape") { e.stopPropagation(); setEditingField(null); }
           }}
           onClick={(e) => e.stopPropagation()}
         />
@@ -114,14 +128,16 @@ export default function TaskRow({ task, onAdd, onDelete, isActive, onClick }) {
         onClick={(e) => { e.stopPropagation(); startEdit(field, value); }}
         title="Click to edit"
       >
-        {value || <span className="placeholder">—</span>}
+        {value || <span className="placeholder">{placeholder || "—"}</span>}
       </span>
     );
   }
 
+  const completeFill = task.status === "complete" ? "complete" : "";
+
   return (
     <div
-      className={`task-row ${isActive ? "active" : ""}`}
+      className={`task-row ${isActive ? "active" : ""} ${completeFill}`}
       style={{ "--depth": task._depth }}
       onClick={onClick}
     >
@@ -138,40 +154,17 @@ export default function TaskRow({ task, onAdd, onDelete, isActive, onClick }) {
       <TypeIcon type={task.task_type} />
 
       <div className="row-title">
-        <InlineEdit
-          field="title"
-          value={task.title}
-          style={{ minWidth: 120, flex: 1 }}
-        />
+        <InlineEdit field="title" value={task.title} style={{ minWidth: 120, flex: 1 }} />
       </div>
 
       <div className="row-fields">
-        <InlineEdit
-          field="assignee"
-          value={task.assignee}
-          style={{ width: 90 }}
-        />
+        <AssigneeAvatar name={task.assignee} />
 
-        <InlineEdit
-          field="start_date"
-          value={task.start_date}
-          type="date"
-          style={{ width: 110 }}
-        />
+        <InlineEdit field="assignee" value={task.assignee} style={{ width: 80 }} placeholder="Assign" />
 
-        <InlineEdit
-          field="end_date"
-          value={task.end_date}
-          type="date"
-          style={{ width: 110 }}
-        />
-
-        <InlineEdit
-          field="effort_hours"
-          value={task.effort_hours}
-          type="number"
-          style={{ width: 55 }}
-        />
+        <InlineEdit field="start_date" value={task.start_date} type="date" style={{ width: 110 }} />
+        <InlineEdit field="end_date" value={task.end_date} type="date" style={{ width: 110 }} />
+        <InlineEdit field="effort_hours" value={task.effort_hours} type="number" style={{ width: 50 }} />
 
         <InlineEdit
           field="status"
@@ -180,50 +173,41 @@ export default function TaskRow({ task, onAdd, onDelete, isActive, onClick }) {
           style={{ width: 110, color: STATUS_COLOURS[task.status] }}
         />
 
-        <InlineEdit
-          field="progress_pct"
-          value={task.progress_pct ?? 0}
-          type="number"
-          style={{ width: 45 }}
-        />
+        <div className="progress-cell" title="Progress %">
+          <div className="progress-mini-bg">
+            <div
+              className="progress-mini-fill"
+              style={{
+                width: `${task.progress_pct || 0}%`,
+                background: task.status === "complete" ? "var(--success)" : "var(--accent)",
+              }}
+            />
+          </div>
+          <InlineEdit field="progress_pct" value={task.progress_pct ?? 0} type="number" style={{ width: 36 }} />
+          <span className="progress-pct-label">%</span>
+        </div>
 
         {task.note_count > 0 && (
-          <span className="badge" title="Notes"><FileText size={11} />{task.note_count}</span>
+          <span className="badge" title={`${task.note_count} notes`}><FileText size={11} />{task.note_count}</span>
         )}
         {task.attachment_count > 0 && (
-          <span className="badge" title="Attachments"><Paperclip size={11} />{task.attachment_count}</span>
+          <span className="badge" title={`${task.attachment_count} attachments`}><Paperclip size={11} />{task.attachment_count}</span>
         )}
       </div>
 
       <div className="row-actions" onClick={(e) => e.stopPropagation()}>
-        <button className="btn-icon" title="Add child" onClick={() => onAdd(task.id)}>
-          <Plus size={13} />
-        </button>
-        <button className="btn-icon" title="Promote (Shift+Tab)" onClick={handlePromote}>
-          <ArrowLeft size={13} />
-        </button>
-        <button className="btn-icon" title="Demote (Tab)" onClick={handleDemote}>
-          <ArrowRight size={13} />
-        </button>
-        <button
-          className="btn-icon danger"
-          title="Delete"
-          onClick={() => setShowDeleteMenu(true)}
-        >
-          <Trash2 size={13} />
-        </button>
+        <button className="btn-icon" title="Add child (insert)" onClick={() => onAdd(task.id)}><Plus size={13} /></button>
+        <button className="btn-icon" title="Promote (Shift+Tab)" onClick={handlePromote}><ArrowLeft size={13} /></button>
+        <button className="btn-icon" title="Demote (Tab)" onClick={handleDemote}><ArrowRight size={13} /></button>
+        <button className="btn-icon danger" title="Delete" onClick={() => setShowDeleteMenu(true)}><Trash2 size={13} /></button>
       </div>
 
       {showDeleteMenu && (
         <div className="delete-menu" onClick={(e) => e.stopPropagation()}>
           <p>Delete children too?</p>
           <div className="delete-menu-actions">
-            <button className="btn-danger" onClick={() => { setShowDeleteMenu(false); onDelete(task.id, true); }}>
-              Delete all
-            </button>
-            <button className="btn-ghost" onClick={() => { setShowDeleteMenu(false); onDelete(task.id, false); }}>
-              Keep children
-            </button>
+            <button className="btn-danger" onClick={() => { setShowDeleteMenu(false); onDelete(task.id, true); }}>Delete all</button>
+            <button className="btn-ghost" onClick={() => { setShowDeleteMenu(false); onDelete(task.id, false); }}>Keep children</button>
             <button className="btn-ghost" onClick={() => setShowDeleteMenu(false)}>Cancel</button>
           </div>
         </div>

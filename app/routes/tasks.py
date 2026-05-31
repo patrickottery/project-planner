@@ -15,6 +15,21 @@ def _reposition_siblings(parent_id, project_id):
     db.session.flush()
 
 
+def _recalculate_progress(task):
+    if task.progress_manual:
+        return
+    children = Task.query.filter_by(parent_id=task.id).all()
+    if not children:
+        return
+    total_effort = sum(c.effort_hours or 1.0 for c in children)
+    weighted = sum((c.progress_pct or 0) * (c.effort_hours or 1.0) for c in children)
+    task.progress_pct = round(weighted / total_effort) if total_effort > 0 else 0
+    if task.parent_id:
+        parent = Task.query.get(task.parent_id)
+        if parent:
+            _recalculate_progress(parent)
+
+
 @tasks_bp.route("/projects/<pid>/tasks", methods=["POST"])
 def create_task(pid):
     data = request.json
@@ -66,6 +81,11 @@ def update_task(tid):
         t.end_date = date.fromisoformat(data["end_date"]) if data["end_date"] else None
     if "position" in data:
         t.position = data["position"]
+    db.session.flush()
+    if t.parent_id:
+        parent = Task.query.get(t.parent_id)
+        if parent:
+            _recalculate_progress(parent)
     db.session.commit()
     return jsonify(t.to_dict())
 
@@ -74,12 +94,19 @@ def update_task(tid):
 def delete_task(tid):
     cascade = request.args.get("cascade", "true").lower() == "true"
     t = Task.query.get_or_404(tid)
+    parent_id = t.parent_id
+    project_id = t.project_id
     if not cascade:
         children = Task.query.filter_by(parent_id=tid).all()
         for child in children:
             child.parent_id = t.parent_id
         db.session.flush()
     db.session.delete(t)
+    db.session.flush()
+    if parent_id:
+        parent = Task.query.get(parent_id)
+        if parent:
+            _recalculate_progress(parent)
     db.session.commit()
     return "", 204
 
@@ -90,10 +117,18 @@ def promote_task(tid):
     if not t.parent_id:
         return jsonify({"error": "Already a root task"}), 400
     parent = Task.query.get(t.parent_id)
+    old_parent_id = t.parent_id
     t.position = parent.position + 5
     t.parent_id = parent.parent_id
-    db.session.commit()
+    db.session.flush()
     _reposition_siblings(t.parent_id, t.project_id)
+    old_parent = Task.query.get(old_parent_id)
+    if old_parent:
+        _recalculate_progress(old_parent)
+    if t.parent_id:
+        new_parent = Task.query.get(t.parent_id)
+        if new_parent:
+            _recalculate_progress(new_parent)
     db.session.commit()
     return jsonify(t.to_dict())
 
@@ -109,11 +144,18 @@ def demote_task(tid):
     ).order_by(Task.position.desc()).first()
     if not prev_sibling:
         return jsonify({"error": "No previous sibling to demote into"}), 400
+    old_parent_id = t.parent_id
     t.parent_id = prev_sibling.id
     max_pos = db.session.query(db.func.max(Task.position)).filter_by(
         parent_id=prev_sibling.id
     ).scalar() or 0
     t.position = max_pos + 10
+    db.session.flush()
+    _recalculate_progress(prev_sibling)
+    if old_parent_id:
+        old_parent = Task.query.get(old_parent_id)
+        if old_parent:
+            _recalculate_progress(old_parent)
     db.session.commit()
     return jsonify(t.to_dict())
 
@@ -122,7 +164,17 @@ def demote_task(tid):
 def move_task(tid):
     t = Task.query.get_or_404(tid)
     data = request.json
+    old_parent_id = t.parent_id
     t.parent_id = data.get("parent_id")
     t.position = data.get("position", 0)
+    db.session.flush()
+    if old_parent_id:
+        old_parent = Task.query.get(old_parent_id)
+        if old_parent:
+            _recalculate_progress(old_parent)
+    if t.parent_id:
+        new_parent = Task.query.get(t.parent_id)
+        if new_parent:
+            _recalculate_progress(new_parent)
     db.session.commit()
     return jsonify(t.to_dict())

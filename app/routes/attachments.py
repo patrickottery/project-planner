@@ -57,6 +57,14 @@ def download_attachment(aid):
     return send_file(file_path, as_attachment=True, download_name=a.filename, mimetype=a.mime_type)
 
 
+@attachments_bp.route("/attachments/<aid>/preview", methods=["GET"])
+def preview_attachment(aid):
+    a = Attachment.query.get_or_404(aid)
+    upload_dir = os.path.join(current_app.config["UPLOADS_PATH"], a.task_id)
+    file_path = os.path.join(upload_dir, a.stored_name)
+    return send_file(file_path, as_attachment=False, mimetype=a.mime_type)
+
+
 @attachments_bp.route("/attachments/<aid>", methods=["DELETE"])
 def delete_attachment(aid):
     a = Attachment.query.get_or_404(aid)

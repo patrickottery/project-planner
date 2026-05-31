@@ -2,20 +2,40 @@ import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useStore } from "../../store/useStore";
 import { api } from "../../api";
-import { X } from "lucide-react";
+import { X, Plus, ChevronRight } from "lucide-react";
 import NotesTab from "./NotesTab";
 import AttachmentsTab from "./AttachmentsTab";
 import "./TaskDetailPanel.css";
 
-const TASK_TYPES = ["task","milestone","phase"];
-const STATUSES = ["not_started","in_progress","complete","blocked","deferred"];
+const TASK_TYPES = ["task", "milestone", "phase"];
+const STATUSES = ["not_started", "in_progress", "complete", "blocked", "deferred"];
+
+function flattenTaskMap(nodes, map = {}) {
+  for (const n of nodes) {
+    map[n.id] = n;
+    if (n.children) flattenTaskMap(n.children, map);
+  }
+  return map;
+}
+
+function buildBreadcrumb(taskId, taskMap) {
+  const crumbs = [];
+  let cur = taskMap[taskId];
+  while (cur) {
+    crumbs.unshift({ id: cur.id, title: cur.title });
+    cur = cur.parent_id ? taskMap[cur.parent_id] : null;
+  }
+  return crumbs;
+}
 
 export default function TaskDetailPanel() {
-  const { activeTaskId, setActiveTask, fetchTasks, activeProjectId } = useStore();
+  const { activeTaskId, setActiveTask, fetchTasks, activeProjectId, tasks } = useStore();
   const [task, setTask] = useState(null);
   const [tab, setTab] = useState("details");
-  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({});
+
+  const taskMap = flattenTaskMap(tasks);
+  const breadcrumb = activeTaskId ? buildBreadcrumb(activeTaskId, taskMap) : [];
 
   useEffect(() => {
     if (!activeTaskId) { setTask(null); return; }
@@ -40,15 +60,22 @@ export default function TaskDetailPanel() {
   if (!activeTaskId || !task) return null;
 
   async function save(patch) {
-    setSaving(true);
     try {
       const updated = await api.updateTask(activeTaskId, patch);
       setTask(updated);
       await fetchTasks(activeProjectId);
     } catch {
       toast.error("Failed to save");
-    } finally {
-      setSaving(false);
+    }
+  }
+
+  async function handleAddChild() {
+    try {
+      const child = await api.createTask(activeProjectId, { parent_id: activeTaskId });
+      await fetchTasks(activeProjectId);
+      setActiveTask(child.id);
+    } catch {
+      toast.error("Failed to add child task");
     }
   }
 
@@ -63,12 +90,31 @@ export default function TaskDetailPanel() {
   return (
     <div className="detail-panel">
       <div className="detail-header">
-        <span className="detail-title">Task Details</span>
-        <button className="btn-icon" onClick={() => setActiveTask(null)}><X size={16} /></button>
+        <div className="detail-breadcrumb">
+          {breadcrumb.map((crumb, i) => (
+            <React.Fragment key={crumb.id}>
+              {i > 0 && <ChevronRight size={11} className="crumb-sep" />}
+              <span
+                className={`crumb ${crumb.id === activeTaskId ? "crumb-current" : "crumb-link"}`}
+                onClick={() => crumb.id !== activeTaskId && setActiveTask(crumb.id)}
+              >
+                {crumb.title}
+              </span>
+            </React.Fragment>
+          ))}
+        </div>
+        <div className="detail-header-actions">
+          <button className="btn-icon" title="Add child task" onClick={handleAddChild}>
+            <Plus size={14} />
+          </button>
+          <button className="btn-icon" onClick={() => setActiveTask(null)} title="Close">
+            <X size={14} />
+          </button>
+        </div>
       </div>
 
       <div className="detail-tabs">
-        {["details","notes","attachments"].map((t) => (
+        {["details", "notes", "attachments"].map((t) => (
           <button
             key={t}
             className={`detail-tab ${tab === t ? "active" : ""}`}
@@ -91,22 +137,33 @@ export default function TaskDetailPanel() {
               onBlur={() => handleBlur("title")}
             />
 
-            <label>Type</label>
-            <select value={form.task_type} onChange={(e) => { handleChange("task_type", e.target.value); save({ task_type: e.target.value }); }}>
-              {TASK_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-
-            <label>Status</label>
-            <select value={form.status} onChange={(e) => { handleChange("status", e.target.value); save({ status: e.target.value }); }}>
-              {STATUSES.map((s) => <option key={s} value={s}>{s.replace("_"," ")}</option>)}
-            </select>
+            <div className="form-row">
+              <div>
+                <label>Type</label>
+                <select value={form.task_type} onChange={(e) => { handleChange("task_type", e.target.value); save({ task_type: e.target.value }); }}>
+                  {TASK_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label>Status</label>
+                <select value={form.status} onChange={(e) => { handleChange("status", e.target.value); save({ status: e.target.value }); }}>
+                  {STATUSES.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
+                </select>
+              </div>
+            </div>
 
             <label>Assignee</label>
             <input
               value={form.assignee}
               onChange={(e) => handleChange("assignee", e.target.value)}
               onBlur={() => handleBlur("assignee")}
+              list="assignee-suggestions"
             />
+            <datalist id="assignee-suggestions">
+              {[...new Set(Object.values(taskMap).map((t) => t.assignee).filter(Boolean))].map((a) => (
+                <option key={a} value={a} />
+              ))}
+            </datalist>
 
             <div className="form-row">
               <div>
@@ -130,9 +187,13 @@ export default function TaskDetailPanel() {
               </div>
             </div>
 
-            <label>
-              <input type="checkbox" checked={form.progress_manual} onChange={(e) => { handleChange("progress_manual", e.target.checked); save({ progress_manual: e.target.checked }); }} />
-              {" "}Manual progress override
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={form.progress_manual}
+                onChange={(e) => { handleChange("progress_manual", e.target.checked); save({ progress_manual: e.target.checked }); }}
+              />
+              Manual progress (don't auto-roll up from children)
             </label>
 
             <label>Description (Markdown)</label>
@@ -141,7 +202,7 @@ export default function TaskDetailPanel() {
               value={form.description}
               onChange={(e) => handleChange("description", e.target.value)}
               onBlur={() => handleBlur("description")}
-              placeholder="Add notes, context, or details…"
+              placeholder="Add context, acceptance criteria, links…"
             />
 
             <label>Bar Colour</label>
@@ -151,12 +212,20 @@ export default function TaskDetailPanel() {
                 value={form.colour || "#6366f1"}
                 onChange={(e) => { handleChange("colour", e.target.value); save({ colour: e.target.value }); }}
               />
-              <button className="btn-ghost" onClick={() => { handleChange("colour", ""); save({ colour: null }); }}>Reset</button>
+              {form.colour && (
+                <button className="btn-ghost" onClick={() => { handleChange("colour", ""); save({ colour: null }); }}>
+                  Reset
+                </button>
+              )}
             </div>
           </div>
         )}
-        {tab === "notes" && <NotesTab taskId={activeTaskId} onUpdate={() => api.getTask(activeTaskId).then(setTask)} />}
-        {tab === "attachments" && <AttachmentsTab taskId={activeTaskId} onUpdate={() => api.getTask(activeTaskId).then(setTask)} />}
+        {tab === "notes" && (
+          <NotesTab taskId={activeTaskId} onUpdate={() => api.getTask(activeTaskId).then(setTask)} />
+        )}
+        {tab === "attachments" && (
+          <AttachmentsTab taskId={activeTaskId} onUpdate={() => api.getTask(activeTaskId).then(setTask)} />
+        )}
       </div>
     </div>
   );

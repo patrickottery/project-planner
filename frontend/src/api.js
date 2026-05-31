@@ -46,6 +46,7 @@ export const api = {
   uploadAttachment: (tid, formData) => req("POST", `/tasks/${tid}/attachments`, formData, true),
   deleteAttachment: (id) => req("DELETE", `/attachments/${id}`),
   downloadUrl: (id) => `${BASE}/attachments/${id}/download`,
+  previewUrl: (id) => `${BASE}/attachments/${id}/preview`,
 
   // Export / import
   exportJson: (pid) => `${BASE}/projects/${pid}/export/json`,

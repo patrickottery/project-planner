@@ -1,0 +1,39 @@
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+
+.lightbox-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 4px;
+  cursor: default;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox-close:hover {
+  background: rgba(255,255,255,0.25);
+}

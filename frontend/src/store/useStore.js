@@ -23,7 +23,7 @@ export const useStore = create(
         })),
 
       pushUndo: (action) =>
-        set((s) => ({ undoStack: [...s.undoStack.slice(-49), action] })),
+        set((s) => ({ undoStack: [...s.undoStack.slice(-29), action] })),
 
       popUndo: () => {
         const stack = get().undoStack;

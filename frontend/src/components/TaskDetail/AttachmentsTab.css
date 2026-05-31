@@ -29,7 +29,18 @@
   border-radius: var(--radius);
   padding: 8px 10px;
 }
-.att-icon { color: var(--text-muted); flex-shrink: 0; }
+.att-icon { color: var(--text-muted); flex-shrink: 0; display: flex; align-items: center; }
+.att-thumbnail {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+.att-thumbnail:hover { opacity: 0.85; }
 .att-info { flex: 1; min-width: 0; }
 .att-name {
   display: block;
@@ -37,7 +48,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 13px;
+  cursor: pointer;
+  color: var(--accent-hover);
 }
+.att-name:hover { text-decoration: underline; }
 .att-meta { font-size: 11px; color: var(--text-muted); }
-.att-actions { display: flex; gap: 2px; flex-shrink: 0; }
+.att-actions { display: flex; gap: 2px; flex-shrink: 0; align-items: center; }
 .empty-text { font-size: 13px; color: var(--text-muted); }
