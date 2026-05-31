@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import toast from "react-hot-toast";
 import { useStore } from "../../store/useStore";
 import { api } from "../../api";
-import { X, Plus, ChevronRight } from "lucide-react";
+import { useDebounce } from "../../hooks/useDebounce";
+import { X, Plus, ChevronRight, Eye, Edit3 } from "lucide-react";
 import NotesTab from "./NotesTab";
 import AttachmentsTab from "./AttachmentsTab";
 import "./TaskDetailPanel.css";
@@ -33,6 +35,7 @@ export default function TaskDetailPanel() {
   const [task, setTask] = useState(null);
   const [tab, setTab] = useState("details");
   const [form, setForm] = useState({});
+  const [previewDesc, setPreviewDesc] = useState(false);
 
   const taskMap = flattenTaskMap(tasks);
   const breadcrumb = activeTaskId ? buildBreadcrumb(activeTaskId, taskMap) : [];
@@ -69,6 +72,9 @@ export default function TaskDetailPanel() {
     }
   }
 
+  const debouncedSaveTitle = useDebounce((v) => save({ title: v }), 500);
+  const debouncedSaveDesc = useDebounce((v) => save({ description: v }), 800);
+
   async function handleAddChild() {
     try {
       const child = await api.createTask(activeProjectId, { parent_id: activeTaskId });
@@ -83,9 +89,7 @@ export default function TaskDetailPanel() {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
-  function handleBlur(field) {
-    save({ [field]: form[field] });
-  }
+  const assigneeSuggestions = [...new Set(Object.values(taskMap).map((t) => t.assignee).filter(Boolean))];
 
   return (
     <div className="detail-panel">
@@ -133,8 +137,10 @@ export default function TaskDetailPanel() {
             <label>Title</label>
             <input
               value={form.title}
-              onChange={(e) => handleChange("title", e.target.value)}
-              onBlur={() => handleBlur("title")}
+              onChange={(e) => {
+                handleChange("title", e.target.value);
+                debouncedSaveTitle(e.target.value);
+              }}
             />
 
             <div className="form-row">
@@ -155,14 +161,12 @@ export default function TaskDetailPanel() {
             <label>Assignee</label>
             <input
               value={form.assignee}
-              onChange={(e) => handleChange("assignee", e.target.value)}
-              onBlur={() => handleBlur("assignee")}
               list="assignee-suggestions"
+              onChange={(e) => handleChange("assignee", e.target.value)}
+              onBlur={() => save({ assignee: form.assignee })}
             />
             <datalist id="assignee-suggestions">
-              {[...new Set(Object.values(taskMap).map((t) => t.assignee).filter(Boolean))].map((a) => (
-                <option key={a} value={a} />
-              ))}
+              {assigneeSuggestions.map((a) => <option key={a} value={a} />)}
             </datalist>
 
             <div className="form-row">
@@ -179,43 +183,55 @@ export default function TaskDetailPanel() {
             <div className="form-row">
               <div>
                 <label>Effort (hrs)</label>
-                <input type="number" min="0" step="0.5" value={form.effort_hours} onChange={(e) => handleChange("effort_hours", e.target.value)} onBlur={() => handleBlur("effort_hours")} />
+                <input type="number" min="0" step="0.5" value={form.effort_hours}
+                  onChange={(e) => handleChange("effort_hours", e.target.value)}
+                  onBlur={() => save({ effort_hours: form.effort_hours || null })} />
               </div>
               <div>
                 <label>Progress %</label>
-                <input type="number" min="0" max="100" value={form.progress_pct} onChange={(e) => handleChange("progress_pct", e.target.value)} onBlur={() => handleBlur("progress_pct")} />
+                <input type="number" min="0" max="100" value={form.progress_pct}
+                  onChange={(e) => handleChange("progress_pct", e.target.value)}
+                  onBlur={() => save({ progress_pct: parseInt(form.progress_pct) || 0 })} />
               </div>
             </div>
 
             <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={form.progress_manual}
-                onChange={(e) => { handleChange("progress_manual", e.target.checked); save({ progress_manual: e.target.checked }); }}
-              />
+              <input type="checkbox" checked={form.progress_manual}
+                onChange={(e) => { handleChange("progress_manual", e.target.checked); save({ progress_manual: e.target.checked }); }} />
               Manual progress (don't auto-roll up from children)
             </label>
 
-            <label>Description (Markdown)</label>
-            <textarea
-              rows={6}
-              value={form.description}
-              onChange={(e) => handleChange("description", e.target.value)}
-              onBlur={() => handleBlur("description")}
-              placeholder="Add context, acceptance criteria, links…"
-            />
+            <div className="desc-header">
+              <label>Description</label>
+              <button type="button" className="btn-icon preview-toggle" onClick={() => setPreviewDesc((p) => !p)}
+                title={previewDesc ? "Edit" : "Preview"}>
+                {previewDesc ? <Edit3 size={13} /> : <Eye size={13} />}
+              </button>
+            </div>
+            {previewDesc ? (
+              <div className="markdown-preview">
+                {form.description
+                  ? <ReactMarkdown>{form.description}</ReactMarkdown>
+                  : <span className="empty-text">No description.</span>}
+              </div>
+            ) : (
+              <textarea
+                rows={7}
+                value={form.description}
+                onChange={(e) => {
+                  handleChange("description", e.target.value);
+                  debouncedSaveDesc(e.target.value);
+                }}
+                placeholder="Markdown supported…"
+              />
+            )}
 
             <label>Bar Colour</label>
             <div className="colour-input-row">
-              <input
-                type="color"
-                value={form.colour || "#6366f1"}
-                onChange={(e) => { handleChange("colour", e.target.value); save({ colour: e.target.value }); }}
-              />
+              <input type="color" value={form.colour || "#6366f1"}
+                onChange={(e) => { handleChange("colour", e.target.value); save({ colour: e.target.value }); }} />
               {form.colour && (
-                <button className="btn-ghost" onClick={() => { handleChange("colour", ""); save({ colour: null }); }}>
-                  Reset
-                </button>
+                <button className="btn-ghost" onClick={() => { handleChange("colour", ""); save({ colour: null }); }}>Reset</button>
               )}
             </div>
           </div>

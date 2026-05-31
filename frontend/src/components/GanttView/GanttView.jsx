@@ -4,6 +4,7 @@ import "gantt-task-react/dist/index.css";
 import { useStore } from "../../store/useStore";
 import { api } from "../../api";
 import toast from "react-hot-toast";
+import { Printer } from "lucide-react";
 import "./GanttView.css";
 
 function flattenTasks(nodes) {
@@ -74,14 +75,15 @@ export default function GanttView() {
     <div className="gantt-wrapper">
       <div className="gantt-toolbar">
         {[ViewMode.Day, ViewMode.Week, ViewMode.Month, ViewMode.QuarterYear].map((vm) => (
-          <button
-            key={vm}
-            className={`view-tab ${viewMode === vm ? "active" : ""}`}
-            onClick={() => setViewMode(vm)}
-          >
+          <button key={vm} className={`view-tab ${viewMode === vm ? "active" : ""}`} onClick={() => setViewMode(vm)}>
             {vm}
           </button>
         ))}
+        <div style={{ flex: 1 }} />
+        <button className="btn-ghost" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13 }}
+          onClick={() => window.print()} title="Print / Save as PDF">
+          <Printer size={13} /> Print
+        </button>
       </div>
       <div className="gantt-container">
         <Gantt

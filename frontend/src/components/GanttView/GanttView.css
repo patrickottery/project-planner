@@ -28,3 +28,14 @@
   text-align: center;
   line-height: 1.8;
 }
+
+@media print {
+  body > * { visibility: hidden; }
+  .gantt-container, .gantt-container * { visibility: visible; }
+  .gantt-container {
+    position: fixed;
+    inset: 0;
+    overflow: visible;
+    background: #fff;
+  }
+}

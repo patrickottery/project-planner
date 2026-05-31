@@ -1,14 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import toast from "react-hot-toast";
 import { useStore } from "../../store/useStore";
 import { api } from "../../api";
-import { FolderOpen, Plus, Trash2, Edit2, Check, X } from "lucide-react";
+import { Plus, Trash2, Edit2, Check, X, Flag, ChevronDown, ChevronRight } from "lucide-react";
+import { format, parseISO, isAfter } from "date-fns";
 import "./Sidebar.css";
 
 const COLOURS = ["#6366f1","#ec4899","#f59e0b","#10b981","#3b82f6","#8b5cf6","#ef4444","#14b8a6"];
 
+function flattenTasks(nodes) {
+  const result = [];
+  for (const n of nodes) {
+    result.push(n);
+    if (n.children?.length) result.push(...flattenTasks(n.children));
+  }
+  return result;
+}
+
 export default function Sidebar() {
-  const { projects, activeProjectId, setActiveProject, fetchProjects } = useStore();
+  const { projects, activeProjectId, setActiveProject, fetchProjects, tasks, setActiveTask, setActiveView } = useStore();
+  const [milestonesOpen, setMilestonesOpen] = useState(true);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [newColour, setNewColour] = useState(COLOURS[0]);
@@ -134,6 +145,44 @@ export default function Sidebar() {
           <p className="empty-hint">No projects yet.<br />Click + to create one.</p>
         )}
       </nav>
+
+      {activeProjectId && <MilestoneList tasks={tasks} onOpen={(id) => { setActiveTask(id); setActiveView("tree"); }} />}
     </aside>
+  );
+}
+
+function MilestoneList({ tasks, onOpen }) {
+  const [open, setOpen] = useState(true);
+  const today = new Date();
+  const flat = useMemo(() => flattenTasks(tasks), [tasks]);
+  const milestones = flat
+    .filter((t) => t.task_type === "milestone")
+    .sort((a, b) => (a.end_date || "").localeCompare(b.end_date || ""));
+
+  if (milestones.length === 0) return null;
+
+  return (
+    <div className="milestone-section">
+      <button className="milestone-header" onClick={() => setOpen((o) => !o)}>
+        <Flag size={12} />
+        <span>Milestones</span>
+        <span className="milestone-count">{milestones.length}</span>
+        {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+      </button>
+      {open && (
+        <div className="milestone-list">
+          {milestones.map((m) => {
+            const isPast = m.end_date && !isAfter(parseISO(m.end_date), today) && m.status !== "complete";
+            return (
+              <div key={m.id} className={`milestone-item ${isPast ? "overdue" : ""} ${m.status === "complete" ? "done" : ""}`}
+                onClick={() => onOpen(m.id)}>
+                <span className="ms-date">{m.end_date ? format(parseISO(m.end_date), "MMM d") : "—"}</span>
+                <span className="ms-title">{m.title}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }

@@ -21,9 +21,31 @@
   background: transparent;
   border: none;
   padding: 0;
-  width: 160px;
+  width: 130px;
 }
 .toolbar-search input:focus {
   outline: none;
   border: none;
+}
+
+.toolbar-date-range {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.toolbar-date-range input[type="date"] {
+  width: 120px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+.date-sep {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.multi-select-btn.active {
+  background: rgba(99,102,241,0.2);
+  color: var(--accent-hover);
+  border-color: var(--accent);
 }

@@ -1,10 +1,10 @@
 import React from "react";
-import { Plus, Search, X } from "lucide-react";
+import { Plus, Search, X, CheckSquare } from "lucide-react";
 import "./TaskTreeToolbar.css";
 
 const STATUSES = ["not_started","in_progress","complete","blocked","deferred"];
 
-export default function TaskTreeToolbar({ onAdd, filter, setFilter, assignees }) {
+export default function TaskTreeToolbar({ onAdd, filter, setFilter, assignees, multiSelectActive, onToggleMultiSelect }) {
   return (
     <div className="tree-toolbar">
       <button className="btn-primary" onClick={onAdd}>
@@ -14,7 +14,7 @@ export default function TaskTreeToolbar({ onAdd, filter, setFilter, assignees })
       <div className="toolbar-search">
         <Search size={13} />
         <input
-          placeholder="Search tasks…"
+          placeholder="Search…"
           value={filter.keyword}
           onChange={(e) => setFilter((f) => ({ ...f, keyword: e.target.value }))}
         />
@@ -23,25 +23,36 @@ export default function TaskTreeToolbar({ onAdd, filter, setFilter, assignees })
         )}
       </div>
 
-      <select
-        value={filter.status}
-        onChange={(e) => setFilter((f) => ({ ...f, status: e.target.value }))}
-      >
+      <select value={filter.status} onChange={(e) => setFilter((f) => ({ ...f, status: e.target.value }))}>
         <option value="">All statuses</option>
-        {STATUSES.map((s) => (
-          <option key={s} value={s}>{s.replace("_", " ")}</option>
-        ))}
+        {STATUSES.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
       </select>
 
       {assignees.length > 0 && (
-        <select
-          value={filter.assignee}
-          onChange={(e) => setFilter((f) => ({ ...f, assignee: e.target.value }))}
-        >
+        <select value={filter.assignee} onChange={(e) => setFilter((f) => ({ ...f, assignee: e.target.value }))}>
           <option value="">All assignees</option>
           {assignees.map((a) => <option key={a} value={a}>{a}</option>)}
         </select>
       )}
+
+      <div className="toolbar-date-range">
+        <input type="date" value={filter.dateFrom} title="Date from"
+          onChange={(e) => setFilter((f) => ({ ...f, dateFrom: e.target.value }))} />
+        <span className="date-sep">–</span>
+        <input type="date" value={filter.dateTo} title="Date to"
+          onChange={(e) => setFilter((f) => ({ ...f, dateTo: e.target.value }))} />
+        {(filter.dateFrom || filter.dateTo) && (
+          <button className="btn-icon" onClick={() => setFilter((f) => ({ ...f, dateFrom: "", dateTo: "" }))}><X size={12} /></button>
+        )}
+      </div>
+
+      <button
+        className={`btn-ghost multi-select-btn ${multiSelectActive ? "active" : ""}`}
+        title="Multi-select"
+        onClick={onToggleMultiSelect}
+      >
+        <CheckSquare size={14} />
+      </button>
     </div>
   );
 }

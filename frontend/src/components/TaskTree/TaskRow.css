@@ -7,13 +7,50 @@
   position: relative;
   cursor: pointer;
   min-height: 34px;
+  transition: background 0.1s;
 }
-.task-row:hover {
-  background: var(--bg-3);
-}
+.task-row:hover { background: var(--bg-3); }
 .task-row.active {
   background: rgba(99,102,241,0.12);
   border-left: 2px solid var(--accent);
+}
+.task-row.dragging { opacity: 0.4; }
+.task-row.drop-before::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 10;
+}
+.task-row.drop-after::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 10;
+}
+
+.drag-handle {
+  color: var(--text-muted);
+  opacity: 0;
+  cursor: grab;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.task-row:hover .drag-handle { opacity: 1; }
+.drag-handle:active { cursor: grabbing; }
+
+.row-checkbox {
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--accent);
 }
 
 .collapse-btn {

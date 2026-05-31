@@ -21,10 +21,15 @@ const STATUS_COLOURS = {
 };
 
 export default function Dashboard() {
-  const { tasks } = useStore();
+  const { tasks, projects, activeProjectId } = useStore();
   const flat = useMemo(() => flattenTasks(tasks), [tasks]);
   const today = new Date();
   const in30 = addDays(today, 30);
+
+  const project = projects.find((p) => p.id === activeProjectId);
+  const dates = flat.flatMap((t) => [t.start_date, t.end_date].filter(Boolean)).sort();
+  const projectStart = dates[0];
+  const projectEnd = dates[dates.length - 1];
 
   const statusCounts = flat.reduce((acc, t) => {
     acc[t.status] = (acc[t.status] || 0) + 1;
@@ -62,6 +67,13 @@ export default function Dashboard() {
     <div className="dashboard">
       <div className="dash-card">
         <h3>Overall Progress</h3>
+        {(projectStart || projectEnd) && (
+          <p className="project-daterange">
+            {projectStart ? format(parseISO(projectStart), "MMM d, yyyy") : "?"}
+            {" — "}
+            {projectEnd ? format(parseISO(projectEnd), "MMM d, yyyy") : "?"}
+          </p>
+        )}
         <div className="progress-bar-bg">
           <div className="progress-bar-fill" style={{ width: `${completePct}%` }} />
         </div>
