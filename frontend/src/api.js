@@ -34,6 +34,7 @@ export const api = {
   promoteTask: (id) => req("POST", `/tasks/${id}/promote`),
   demoteTask: (id) => req("POST", `/tasks/${id}/demote`),
   moveTask: (id, data) => req("POST", `/tasks/${id}/move`, data),
+  duplicateTask: (id, recursive = false) => req("POST", `/tasks/${id}/duplicate?recursive=${recursive}`),
 
   // Notes
   getNotes: (tid) => req("GET", `/tasks/${tid}/notes`),

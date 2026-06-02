@@ -160,6 +160,42 @@ def demote_task(tid):
     return jsonify(t.to_dict())
 
 
+@tasks_bp.route("/tasks/<tid>/duplicate", methods=["POST"])
+def duplicate_task(tid):
+    recursive = request.args.get("recursive", "false").lower() == "true"
+    original = Task.query.get_or_404(tid)
+
+    def _copy(src, parent_id, position, top_level=False):
+        t = Task(
+            project_id=src.project_id,
+            parent_id=parent_id,
+            position=position,
+            title=src.title + " (copy)" if top_level else src.title,
+            description=src.description,
+            assignee=src.assignee,
+            task_type=src.task_type,
+            status=src.status,
+            start_date=src.start_date,
+            end_date=src.end_date,
+            effort_hours=src.effort_hours,
+            progress_pct=src.progress_pct,
+            progress_manual=src.progress_manual,
+            colour=src.colour,
+            dependencies=[],
+        )
+        db.session.add(t)
+        db.session.flush()
+        if recursive:
+            children = Task.query.filter_by(parent_id=src.id).order_by(Task.position).all()
+            for child in children:
+                _copy(child, t.id, child.position)
+        return t
+
+    new_task = _copy(original, original.parent_id, original.position + 5, top_level=True)
+    db.session.commit()
+    return jsonify(new_task.to_dict()), 201
+
+
 @tasks_bp.route("/tasks/<tid>/move", methods=["POST"])
 def move_task(tid):
     t = Task.query.get_or_404(tid)

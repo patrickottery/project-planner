@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useStore } from "../../store/useStore";
 import { api } from "../../api";
@@ -21,6 +21,45 @@ const STATUS_LABELS = {
   complete:    "Complete",
   blocked:     "Blocked",
 };
+
+const STATUS_LIST = Object.entries(STATUS_LABELS).map(([value, label]) => ({
+  value, label, colour: STATUS_COLOURS[value],
+}));
+
+function StatusPicker({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => { if (!ref.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  const current = STATUS_LIST.find(s => s.value === value);
+
+  return (
+    <div className="status-picker" ref={ref} onClick={e => e.stopPropagation()}>
+      <button className="status-picker-display editable" onClick={() => setOpen(o => !o)} title="Click to change status">
+        <span className="status-dot-sm" style={{ background: current?.colour }} />
+        <span style={{ color: current?.colour }}>{current?.label ?? value}</span>
+      </button>
+      {open && (
+        <div className="status-picker-dropdown">
+          {STATUS_LIST.map(({ value: v, label, colour }) => (
+            <button key={v}
+              className={`status-picker-opt ${v === value ? "active" : ""}`}
+              onClick={() => { onChange(v); setOpen(false); }}>
+              <span className="status-dot-sm" style={{ background: colour }} />
+              <span style={{ color: colour }}>{label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function TypeIcon({ type }) {
   if (type === "milestone") return <Flag size={13} style={{ color: "#f59e0b" }} />;
@@ -180,9 +219,7 @@ export default function TaskRow({
           <InlineEdit field="effort_hours" value={task.effort_hours} type="number" style={{ width: 48 }} />
         </span>
         <span className="col-status">
-          <InlineEdit field="status" value={task.status}
-            options={Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))}
-            style={{ width: 108, color: STATUS_COLOURS[task.status] }} />
+          <StatusPicker value={task.status} onChange={(v) => commitEdit("status", v)} />
         </span>
         <span className="col-progress">
           <div className="progress-cell">

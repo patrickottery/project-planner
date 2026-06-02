@@ -194,6 +194,14 @@ export default function TaskTree() {
     } catch { toast.error("Failed to change type"); }
   }
 
+  async function handleDuplicate(taskId, recursive) {
+    try {
+      await api.duplicateTask(taskId, recursive);
+      await fetchTasks(activeProjectId);
+      toast.success(recursive ? "Branch duplicated" : "Task duplicated", { duration: 1500 });
+    } catch { toast.error("Failed to duplicate"); }
+  }
+
   // ── Multi-select ──────────────────────────────────────────────────────────
 
   function toggleSelected(id) {
@@ -373,6 +381,7 @@ export default function TaskTree() {
           onPromote={handleCtxPromote}
           onDemote={handleCtxDemote}
           onChangeType={handleChangeType}
+          onDuplicate={handleDuplicate}
           onEdit={(task) => setEditingTask(task)}
         />
       )}

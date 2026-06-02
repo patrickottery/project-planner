@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Plus, ArrowLeft, ArrowRight, Edit3, Circle, Flag, Layers } from "lucide-react";
+import { Plus, ArrowLeft, ArrowRight, Edit3, Circle, Flag, Layers, Copy, GitBranch } from "lucide-react";
 import "./ContextMenu.css";
 
 export default function ContextMenu({
   x, y, task,
-  onClose, onAddSubtask, onPromote, onDemote, onChangeType, onEdit,
+  onClose, onAddSubtask, onPromote, onDemote, onChangeType, onDuplicate, onEdit,
 }) {
   const ref = useRef(null);
   const [pos, setPos] = useState({ left: x, top: y });
@@ -70,6 +70,17 @@ export default function ContextMenu({
       >
         <Layers size={13} style={{ color: "#8b5cf6" }} /> Phase
       </button>
+
+      <div className="ctx-sep" />
+
+      <button className="ctx-item" onClick={() => { onDuplicate(task.id, false); onClose(); }}>
+        <Copy size={13} /> Duplicate task
+      </button>
+      {task.children?.length > 0 && (
+        <button className="ctx-item" onClick={() => { onDuplicate(task.id, true); onClose(); }}>
+          <GitBranch size={13} /> Duplicate with subtasks
+        </button>
+      )}
 
       <div className="ctx-sep" />
 

@@ -201,6 +201,64 @@
   .row-title { font-size: 14px; }
 }
 
+/* ── StatusPicker ────────────────────────────────────────── */
+.status-picker {
+  position: relative;
+  width: 100%;
+}
+
+.status-picker-display {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.status-picker-display:hover {
+  background: var(--bg);
+  outline: 1px solid var(--border);
+}
+
+.status-picker-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  z-index: 200;
+  min-width: 130px;
+  padding: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.status-picker-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+.status-picker-opt:hover { background: var(--bg-3); }
+.status-picker-opt.active { background: var(--bg-3); font-weight: 600; }
+
 .delete-menu {
   position: absolute;
   right: 8px;

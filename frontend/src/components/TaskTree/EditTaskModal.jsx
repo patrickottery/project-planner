@@ -113,7 +113,7 @@ export default function EditTaskModal({ task, onClose }) {
                 {STATUSES.map(({ value, label, colour }) => (
                   <button key={value} type="button"
                     className={`type-btn ${form.status === value ? "active" : ""}`}
-                    style={form.status === value ? { borderColor: colour, color: colour } : {}}
+                    style={{ borderColor: form.status === value ? colour : "transparent", color: colour }}
                     onClick={() => set("status", value)}>
                     <span className="status-dot-sm" style={{ background: colour }} />
                     {label}
