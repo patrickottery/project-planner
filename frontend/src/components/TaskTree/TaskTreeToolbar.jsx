@@ -1,15 +1,46 @@
-import React from "react";
-import { Plus, Search, X, CheckSquare } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Plus, Search, X, CheckSquare, Circle, Flag, Layers, ChevronDown } from "lucide-react";
 import "./TaskTreeToolbar.css";
 
-const STATUSES = ["not_started","in_progress","complete","blocked","deferred"];
+const STATUSES = ["not_started","in_progress","complete","blocked"];
+const STATUS_LABELS = { not_started:"Not Started", in_progress:"In Progress", complete:"Complete", blocked:"Blocked" };
+
+const ADD_TYPES = [
+  { type: "task",      label: "Task",      Icon: Circle, colour: "#8892a4" },
+  { type: "phase",     label: "Phase",     Icon: Layers, colour: "#8b5cf6" },
+  { type: "milestone", label: "Milestone", Icon: Flag,   colour: "#f59e0b" },
+];
 
 export default function TaskTreeToolbar({ onAdd, filter, setFilter, assignees, multiSelectActive, onToggleMultiSelect }) {
+  const [addOpen, setAddOpen] = useState(false);
+  const addRef = useRef(null);
+
+  useEffect(() => {
+    if (!addOpen) return;
+    const onDown = (e) => { if (!addRef.current?.contains(e.target)) setAddOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [addOpen]);
+
   return (
     <div className="tree-toolbar">
-      <button className="btn-primary" onClick={onAdd}>
-        <Plus size={14} /> Add Task
-      </button>
+      <div className="add-btn-group" ref={addRef}>
+        <button className="btn-primary add-main" onClick={() => onAdd(null, "task")}>
+          <Plus size={14} /> Add
+        </button>
+        <button className="btn-primary add-chevron" onClick={() => setAddOpen(v => !v)} title="Choose type">
+          <ChevronDown size={12} />
+        </button>
+        {addOpen && (
+          <div className="add-dropdown">
+            {ADD_TYPES.map(({ type, label, Icon, colour }) => (
+              <button key={type} className="add-dropdown-item" onClick={() => { onAdd(null, type); setAddOpen(false); }}>
+                <Icon size={13} style={{ color: colour }} /> {label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="toolbar-search">
         <Search size={13} />
@@ -25,7 +56,7 @@ export default function TaskTreeToolbar({ onAdd, filter, setFilter, assignees, m
 
       <select value={filter.status} onChange={(e) => setFilter((f) => ({ ...f, status: e.target.value }))}>
         <option value="">All statuses</option>
-        {STATUSES.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
+        {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
       </select>
 
       {assignees.length > 0 && (

@@ -12,6 +12,9 @@ export const useStore = create(
       activeView: "tree",
       collapsed: {},
       undoStack: [],
+      sidebarOpen: true,
+      toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
+      setSidebarOpen: (v) => set({ sidebarOpen: v }),
 
       setActiveProject: (id) => set({ activeProjectId: id, activeTaskId: null }),
       setActiveTask: (id) => set({ activeTaskId: id }),

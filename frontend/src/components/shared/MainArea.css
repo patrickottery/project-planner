@@ -3,24 +3,24 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  position: relative;
-}
-
-.main-area--empty {
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
+  min-width: 0;
 }
 
 .main-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
+  gap: 8px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--border);
   background: var(--bg-2);
   flex-shrink: 0;
-  gap: 12px;
+}
+
+.sidebar-toggle {
+  flex-shrink: 0;
+  border: 1px solid var(--border) !important;
+  width: 32px;
+  height: 32px;
 }
 
 .main-title {
@@ -29,19 +29,21 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.main-title-empty {
+  font-size: 14px;
+  color: var(--text-muted);
+  flex: 1;
 }
 
 .main-header-right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex-shrink: 0;
-}
-
-.theme-btn-corner {
-  position: absolute;
-  top: 12px;
-  right: 16px;
 }
 
 .main-content {
@@ -49,4 +51,30 @@
   overflow: hidden;
   display: flex;
   position: relative;
+}
+
+.main-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--text-muted);
+}
+.main-empty .btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* On narrow screens, hide Export and show only icon tabs */
+@media (max-width: 600px) {
+  .main-header {
+    padding: 8px;
+    gap: 6px;
+  }
+  .main-title {
+    font-size: 13px;
+  }
 }

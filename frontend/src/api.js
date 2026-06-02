@@ -52,4 +52,10 @@ export const api = {
   exportJson: (pid) => `${BASE}/projects/${pid}/export/json`,
   exportCsv: (pid) => `${BASE}/projects/${pid}/export/csv`,
   importJson: (data) => req("POST", "/projects/import/json", data),
+
+  // Risks & Issues
+  getRisks: (pid) => req("GET", `/projects/${pid}/risks`),
+  createRisk: (pid, data) => req("POST", `/projects/${pid}/risks`, data),
+  updateRisk: (id, data) => req("PUT", `/risks/${id}`, data),
+  deleteRisk: (id) => req("DELETE", `/risks/${id}`),
 };

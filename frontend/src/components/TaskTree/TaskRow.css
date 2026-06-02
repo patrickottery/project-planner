@@ -12,7 +12,7 @@
 .task-row:hover { background: var(--bg-3); }
 .task-row.active {
   background: rgba(99,102,241,0.12);
-  border-left: 2px solid var(--accent);
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 .task-row.dragging { opacity: 0.4; }
 .task-row.drop-before::before {
@@ -92,13 +92,11 @@
 }
 
 .row-actions {
-  display: none;
+  display: flex;
   align-items: center;
   gap: 2px;
-  margin-left: 4px;
-}
-.task-row:hover .row-actions {
-  display: flex;
+  flex-shrink: 0;
+  width: 92px;
 }
 
 .badge {
@@ -155,6 +153,52 @@
 .task-row.complete .row-title .editable {
   text-decoration: line-through;
   color: var(--text-muted);
+}
+
+/* Column wrappers — fixed widths ensure header/row alignment */
+.col-assignee, .col-dates, .col-effort, .col-status, .col-progress, .col-badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.col-assignee  { width: 108px; }
+.col-dates     { width: 228px; }
+.col-effort    { width: 56px; }
+.col-status    { width: 120px; }
+.col-progress  { width: 90px; }
+.col-badges    { min-width: 44px; }
+
+/* Mobile-only status dot */
+.status-dot-mobile {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: none;
+  margin-left: 6px;
+}
+
+/* ── Responsive breakpoints ─────────────────────────────── */
+
+/* Below 1100px: hide effort */
+@media (max-width: 1099px) {
+  .col-effort { display: none; }
+}
+
+/* Below 900px: hide dates */
+@media (max-width: 899px) {
+  .col-dates { display: none; }
+}
+
+/* Below 700px: minimal card rows — just actions + icon + title + status dot */
+@media (max-width: 699px) {
+  .row-fields { display: none; }
+  .status-dot-mobile { display: block; }
+  .row-actions .btn-icon:not(:first-child):not(.danger) { display: none; }
+  .drag-handle { display: none; }
+  .task-row { min-height: 48px; padding: 8px 12px; }
+  .row-title { font-size: 14px; }
 }
 
 .delete-menu {

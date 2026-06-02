@@ -2,4 +2,20 @@
   display: flex;
   height: 100vh;
   overflow: hidden;
+  position: relative;
+}
+
+/* Mobile backdrop — only visible on small screens */
+.sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 150;
+  }
 }

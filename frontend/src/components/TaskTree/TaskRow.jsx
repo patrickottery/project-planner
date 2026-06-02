@@ -10,18 +10,16 @@ import {
 import "./TaskRow.css";
 
 const STATUS_COLOURS = {
-  not_started: "#8892a4",
+  not_started: "#94a3b8",
   in_progress: "#6366f1",
-  complete: "#22c55e",
-  blocked: "#ef4444",
-  deferred: "#f59e0b",
+  complete:    "#22c55e",
+  blocked:     "#ef4444",
 };
 const STATUS_LABELS = {
   not_started: "Not Started",
   in_progress: "In Progress",
-  complete: "Complete",
-  blocked: "Blocked",
-  deferred: "Deferred",
+  complete:    "Complete",
+  blocked:     "Blocked",
 };
 
 function TypeIcon({ type }) {
@@ -43,6 +41,7 @@ export default function TaskRow({
   task, onAdd, onDelete, isActive, onClick,
   multiSelectActive, isSelected, onToggleSelect,
   dragState, onDragStart, onDragOver, onDragLeave, onDrop, onDragEnd,
+  onContextMenu,
 }) {
   const { collapsed, toggleCollapsed, fetchTasks, activeProjectId } = useStore();
   const [editingField, setEditingField] = useState(null);
@@ -106,8 +105,10 @@ export default function TaskRow({
     }
     return (
       <span className="editable" style={style}
-        onClick={(e) => { e.stopPropagation(); startEdit(field, value); }} title="Click to edit">
-        {value || <span className="placeholder">{placeholder || "—"}</span>}
+        onClick={(e) => { e.stopPropagation(); startEdit(field, value); }}
+        title="Click to edit">
+        {(options ? options.find(o => o.value === value)?.label ?? value : value)
+          || <span className="placeholder">{placeholder || "—"}</span>}
       </span>
     );
   }
@@ -124,6 +125,7 @@ export default function TaskRow({
       ].filter(Boolean).join(" ")}
       style={{ "--depth": task._depth }}
       onClick={onClick}
+      onContextMenu={(e) => { e.preventDefault(); onContextMenu?.(e, task); }}
       draggable
       onDragStart={(e) => { e.stopPropagation(); onDragStart(task.id); }}
       onDragOver={(e) => {
@@ -143,6 +145,13 @@ export default function TaskRow({
 
       <span className="drag-handle" title="Drag to reorder"><GripVertical size={12} /></span>
 
+      <div className="row-actions" onClick={(e) => e.stopPropagation()}>
+        <button className="btn-icon" title="Add child" onClick={() => onAdd(task.id)}><Plus size={13} /></button>
+        <button className="btn-icon" title="Promote (Shift+Tab)" onClick={handlePromote}><ArrowLeft size={13} /></button>
+        <button className="btn-icon" title="Demote (Tab)" onClick={handleDemote}><ArrowRight size={13} /></button>
+        <button className="btn-icon danger" title="Delete" onClick={() => setShowDeleteMenu(true)}><Trash2 size={13} /></button>
+      </div>
+
       <div className="row-indent" style={{ width: task._depth * 20 }} />
 
       <button className="btn-icon collapse-btn"
@@ -155,40 +164,46 @@ export default function TaskRow({
 
       <div className="row-title">
         <InlineEdit field="title" value={task.title} style={{ minWidth: 120, flex: 1 }} />
+        <span className="status-dot-mobile" style={{ background: STATUS_COLOURS[task.status] }} title={STATUS_LABELS[task.status]} />
       </div>
 
       <div className="row-fields">
-        <AssigneeAvatar name={task.assignee} />
-        <InlineEdit field="assignee" value={task.assignee} style={{ width: 76 }} placeholder="Assign" />
-        <InlineEdit field="start_date" value={task.start_date} type="date" style={{ width: 108 }} />
-        <InlineEdit field="end_date" value={task.end_date} type="date" style={{ width: 108 }} />
-        <InlineEdit field="effort_hours" value={task.effort_hours} type="number" style={{ width: 48 }} />
-        <InlineEdit field="status" value={task.status}
-          options={Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))}
-          style={{ width: 108, color: STATUS_COLOURS[task.status] }} />
-        <div className="progress-cell">
-          <div className="progress-mini-bg">
-            <div className="progress-mini-fill" style={{
-              width: `${task.progress_pct || 0}%`,
-              background: task.status === "complete" ? "var(--success)" : "var(--accent)",
-            }} />
+        <span className="col-assignee">
+          <AssigneeAvatar name={task.assignee} />
+          <InlineEdit field="assignee" value={task.assignee} style={{ width: 72 }} placeholder="Assign" />
+        </span>
+        <span className="col-dates">
+          <InlineEdit field="start_date" value={task.start_date} type="date" style={{ width: 108 }} />
+          <InlineEdit field="end_date" value={task.end_date} type="date" style={{ width: 108 }} />
+        </span>
+        <span className="col-effort">
+          <InlineEdit field="effort_hours" value={task.effort_hours} type="number" style={{ width: 48 }} />
+        </span>
+        <span className="col-status">
+          <InlineEdit field="status" value={task.status}
+            options={Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+            style={{ width: 108, color: STATUS_COLOURS[task.status] }} />
+        </span>
+        <span className="col-progress">
+          <div className="progress-cell">
+            <div className="progress-mini-bg">
+              <div className="progress-mini-fill" style={{
+                width: `${task.progress_pct || 0}%`,
+                background: task.status === "complete" ? "var(--success)" : "var(--accent)",
+              }} />
+            </div>
+            <InlineEdit field="progress_pct" value={task.progress_pct ?? 0} type="number" style={{ width: 34 }} />
+            <span className="progress-pct-label">%</span>
           </div>
-          <InlineEdit field="progress_pct" value={task.progress_pct ?? 0} type="number" style={{ width: 34 }} />
-          <span className="progress-pct-label">%</span>
-        </div>
-        {task.note_count > 0 && (
-          <span className="badge" title={`${task.note_count} notes`}><FileText size={11} />{task.note_count}</span>
-        )}
-        {task.attachment_count > 0 && (
-          <span className="badge" title={`${task.attachment_count} attachments`}><Paperclip size={11} />{task.attachment_count}</span>
-        )}
-      </div>
-
-      <div className="row-actions" onClick={(e) => e.stopPropagation()}>
-        <button className="btn-icon" title="Add child" onClick={() => onAdd(task.id)}><Plus size={13} /></button>
-        <button className="btn-icon" title="Promote (Shift+Tab)" onClick={handlePromote}><ArrowLeft size={13} /></button>
-        <button className="btn-icon" title="Demote (Tab)" onClick={handleDemote}><ArrowRight size={13} /></button>
-        <button className="btn-icon danger" title="Delete" onClick={() => setShowDeleteMenu(true)}><Trash2 size={13} /></button>
+        </span>
+        <span className="col-badges">
+          {task.note_count > 0 && (
+            <span className="badge" title={`${task.note_count} notes`}><FileText size={11} />{task.note_count}</span>
+          )}
+          {task.attachment_count > 0 && (
+            <span className="badge" title={`${task.attachment_count} attachments`}><Paperclip size={11} />{task.attachment_count}</span>
+          )}
+        </span>
       </div>
 
       {showDeleteMenu && (

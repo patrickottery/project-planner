@@ -1,0 +1,221 @@
+.rr-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 16px 20px;
+  gap: 14px;
+}
+
+.rr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.rr-tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.rr-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+}
+.rr-tab:hover { background: var(--bg-3); color: var(--text); }
+.rr-tab.active { background: var(--bg-3); color: var(--text); border-color: var(--border); }
+
+.rr-count {
+  background: var(--bg-2);
+  border-radius: 10px;
+  padding: 0 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.rr-add-btn { gap: 5px; }
+
+.rr-table {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rr-table-head {
+  display: grid;
+  grid-template-columns: 18px 1fr 200px 120px 100px 64px;
+  align-items: center;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.rr-row {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg-2);
+  transition: border-color 0.15s;
+}
+.rr-row:hover { border-color: var(--border-hover, #3e4560); }
+
+.rr-row-main {
+  display: grid;
+  grid-template-columns: 18px 1fr 200px 120px 100px 64px;
+  align-items: center;
+  padding: 8px 8px;
+  gap: 4px;
+  cursor: default;
+}
+.rr-row.expanded .rr-row-main { cursor: pointer; }
+.rr-row-main:hover { background: var(--bg-3); }
+
+.rr-chevron {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+}
+
+.rr-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rr-badges {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.rr-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.rr-prob {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg-3);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.rr-owner {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rr-date {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.rr-empty {
+  color: var(--text-muted);
+  opacity: 0.4;
+}
+
+.rr-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.rr-row:hover .rr-actions { opacity: 1; }
+
+.rr-del:hover { color: #ef4444 !important; }
+
+.rr-row-detail {
+  border-top: 1px solid var(--border);
+  padding: 10px 12px 12px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rr-detail-body {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.rr-response {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rr-response-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rr-response p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+}
+
+.rr-empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.rr-modal {
+  max-width: 560px;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent, #6366f1);
+  font-size: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.btn-link:hover { opacity: 0.8; }
+
+@media (max-width: 700px) {
+  .rr-table-head,
+  .rr-row-main {
+    grid-template-columns: 18px 1fr 140px 0 0 48px;
+  }
+  .rr-owner, .rr-date { display: none; }
+}

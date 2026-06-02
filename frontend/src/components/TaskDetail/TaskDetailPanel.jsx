@@ -60,6 +60,12 @@ export default function TaskDetailPanel() {
     });
   }, [activeTaskId]);
 
+  // Must be called before any early return to comply with Rules of Hooks.
+  // `save` is a function declaration so it's hoisted into scope even though
+  // it appears below these two lines.
+  const debouncedSaveTitle = useDebounce((v) => save({ title: v }), 500);
+  const debouncedSaveDesc = useDebounce((v) => save({ description: v }), 800);
+
   if (!activeTaskId || !task) return null;
 
   async function save(patch) {
@@ -71,9 +77,6 @@ export default function TaskDetailPanel() {
       toast.error("Failed to save");
     }
   }
-
-  const debouncedSaveTitle = useDebounce((v) => save({ title: v }), 500);
-  const debouncedSaveDesc = useDebounce((v) => save({ description: v }), 800);
 
   async function handleAddChild() {
     try {

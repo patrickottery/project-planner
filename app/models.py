@@ -115,6 +115,43 @@ class Note(db.Model):
         }
 
 
+class RiskIssue(db.Model):
+    __tablename__ = "risk_issues"
+
+    id = db.Column(db.String(36), primary_key=True, default=new_uuid)
+    project_id = db.Column(db.String(36), db.ForeignKey("projects.id"), nullable=False)
+    entry_type = db.Column(db.String(10), nullable=False, default="risk")  # risk | issue
+    title = db.Column(db.String(500), nullable=False)
+    description = db.Column(db.Text)
+    status = db.Column(db.String(20), default="open")
+    impact = db.Column(db.String(10), default="medium")   # low | medium | high | critical
+    probability = db.Column(db.String(10), default="medium")  # low | medium | high (risks only)
+    owner = db.Column(db.String(255))
+    response = db.Column(db.Text)   # mitigation plan (risk) or resolution notes (issue)
+    raised_date = db.Column(db.Date)
+    due_date = db.Column(db.Date)
+    created_at = db.Column(db.DateTime, default=now)
+    updated_at = db.Column(db.DateTime, default=now, onupdate=now)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "project_id": self.project_id,
+            "entry_type": self.entry_type,
+            "title": self.title,
+            "description": self.description,
+            "status": self.status,
+            "impact": self.impact,
+            "probability": self.probability,
+            "owner": self.owner,
+            "response": self.response,
+            "raised_date": self.raised_date.isoformat() if self.raised_date else None,
+            "due_date": self.due_date.isoformat() if self.due_date else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
 class Attachment(db.Model):
     __tablename__ = "attachments"
 

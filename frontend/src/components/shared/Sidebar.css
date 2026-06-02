@@ -6,6 +6,35 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: width 0.22s ease, min-width 0.22s ease;
+  flex-shrink: 0;
+}
+
+/* Desktop collapse — shrinks inline, pushing main content */
+.sidebar.closed {
+  width: 0;
+  min-width: 0;
+}
+
+/* Mobile — fixed overlay, slides in/out */
+@media (max-width: 899px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 200;
+    width: 260px;
+    min-width: 260px;
+    transform: translateX(0);
+    transition: transform 0.25s ease;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+  }
+  .sidebar.closed {
+    width: 260px;
+    min-width: 260px;
+    transform: translateX(-105%);
+  }
 }
 
 .sidebar-header {
@@ -14,6 +43,7 @@
   justify-content: space-between;
   padding: 14px 12px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .sidebar-logo {
@@ -21,6 +51,19 @@
   font-weight: 600;
   color: var(--text);
   letter-spacing: 0.02em;
+}
+
+.sidebar-header-actions {
+  display: flex;
+  gap: 2px;
+}
+
+/* Hide the X close button on desktop */
+.sidebar-close-btn {
+  display: none;
+}
+@media (max-width: 899px) {
+  .sidebar-close-btn { display: flex; }
 }
 
 .btn-icon {
@@ -48,6 +91,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex-shrink: 0;
 }
 .new-project-form input {
   width: 100%;
@@ -86,14 +130,16 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 12px;
+  padding: 8px 12px;
   cursor: pointer;
-  border-radius: 0;
   position: relative;
+  min-height: 40px;
 }
-.project-item:hover {
-  background: var(--bg-3);
+@media (max-width: 899px) {
+  .project-item { min-height: 48px; }
 }
+
+.project-item:hover { background: var(--bg-3); }
 .project-item.active {
   background: rgba(99,102,241,0.15);
 }
@@ -137,12 +183,32 @@
   font-size: 13px;
 }
 
+.project-edit-form {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.project-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-colour-row {
+  padding-left: 14px;
+}
+
 .empty-hint {
   padding: 20px 12px;
   color: var(--text-muted);
   font-size: 12px;
   line-height: 1.6;
 }
+
+/* ── Milestone section ─────────────────────────────────────────── */
 
 .milestone-section {
   border-top: 1px solid var(--border);
@@ -183,9 +249,10 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
+  padding: 6px 12px;
   cursor: pointer;
   font-size: 12px;
+  min-height: 36px;
 }
 .milestone-item:hover { background: var(--bg-3); }
 .milestone-item.overdue .ms-date { color: var(--danger); }

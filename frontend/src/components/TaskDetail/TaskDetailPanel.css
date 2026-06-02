@@ -8,6 +8,17 @@
   overflow: hidden;
 }
 
+@media (max-width: 899px) {
+  .detail-panel {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    min-width: 0;
+    z-index: 120;
+    border-left: none;
+  }
+}
+
 .detail-header {
   display: flex;
   align-items: flex-start;

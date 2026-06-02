@@ -17,6 +17,68 @@
   color: var(--text-muted);
 }
 
+/* Column header row — same flex structure as a task row */
+.tree-header-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-bottom: 2px solid var(--border);
+  background: var(--bg-2);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.header-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+@media (max-width: 699px) {
+  .tree-header-row { display: none; }
+}
+
+/* ── Column visibility toggles ─────────────────────────────── */
+.task-tree.hide-col-assignee .col-assignee { display: none !important; }
+.task-tree.hide-col-dates    .col-dates    { display: none !important; }
+.task-tree.hide-col-effort   .col-effort   { display: none !important; }
+.task-tree.hide-col-status   .col-status   { display: none !important; }
+.task-tree.hide-col-progress .col-progress { display: none !important; }
+
+/* Column visibility context menu */
+.col-vis-menu {
+  position: fixed;
+  z-index: 500;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  padding: 4px;
+  min-width: 160px;
+}
+
+.col-vis-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  flex-shrink: 0;
+  font-size: 9px;
+  color: transparent;
+}
+.col-vis-check.checked {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
 .tree-shortcuts-hint {
   padding: 4px 12px;
   font-size: 11px;
@@ -24,4 +86,8 @@
   border-top: 1px solid var(--border);
   background: var(--bg-2);
   flex-shrink: 0;
+}
+
+@media (max-width: 699px) {
+  .tree-shortcuts-hint { display: none; }
 }

@@ -18,13 +18,14 @@ function flattenTasks(nodes) {
 }
 
 export default function Sidebar() {
-  const { projects, activeProjectId, setActiveProject, fetchProjects, tasks, setActiveTask, setActiveView } = useStore();
+  const { projects, activeProjectId, setActiveProject, fetchProjects, tasks, setActiveTask, setActiveView, sidebarOpen, setSidebarOpen } = useStore();
   const [milestonesOpen, setMilestonesOpen] = useState(true);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [newColour, setNewColour] = useState(COLOURS[0]);
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
+  const [editColour, setEditColour] = useState(COLOURS[0]);
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -55,7 +56,7 @@ export default function Sidebar() {
   async function handleRename(id) {
     if (!editName.trim()) return;
     try {
-      await api.updateProject(id, { name: editName.trim() });
+      await api.updateProject(id, { name: editName.trim(), colour: editColour });
       await fetchProjects();
       setEditingId(null);
     } catch {
@@ -64,16 +65,17 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
       <div className="sidebar-header">
         <span className="sidebar-logo">Project Planner</span>
-        <button
-          className="btn-icon"
-          title="New project"
-          onClick={() => setCreating(true)}
-        >
-          <Plus size={16} />
-        </button>
+        <div className="sidebar-header-actions">
+          <button className="btn-icon" title="New project" onClick={() => setCreating(true)}>
+            <Plus size={16} />
+          </button>
+          <button className="btn-icon sidebar-close-btn" title="Close" onClick={() => setSidebarOpen(false)}>
+            <X size={16} />
+          </button>
+        </div>
       </div>
 
       {creating && (
@@ -104,41 +106,50 @@ export default function Sidebar() {
 
       <nav className="project-list">
         {projects.map((p) => (
-          <div
-            key={p.id}
-            className={`project-item ${p.id === activeProjectId ? "active" : ""}`}
-            onClick={() => setActiveProject(p.id)}
-          >
-            <span className="project-dot" style={{ background: p.colour }} />
+          <div key={p.id}>
             {editingId === p.id ? (
-              <input
-                className="rename-input"
-                autoFocus
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleRename(p.id);
-                  if (e.key === "Escape") setEditingId(null);
-                }}
-                onClick={(e) => e.stopPropagation()}
-              />
+              <div className="project-edit-form" onClick={(e) => e.stopPropagation()}>
+                <div className="project-edit-row">
+                  <span className="project-dot" style={{ background: editColour }} />
+                  <input
+                    className="rename-input"
+                    autoFocus
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleRename(p.id);
+                      if (e.key === "Escape") setEditingId(null);
+                    }}
+                  />
+                  <button className="btn-icon" onClick={() => handleRename(p.id)}><Check size={13} /></button>
+                  <button className="btn-icon" onClick={() => setEditingId(null)}><X size={13} /></button>
+                </div>
+                <div className="colour-row edit-colour-row">
+                  {COLOURS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      className={`colour-dot ${c === editColour ? "selected" : ""}`}
+                      style={{ background: c }}
+                      onClick={() => setEditColour(c)}
+                    />
+                  ))}
+                </div>
+              </div>
             ) : (
-              <span className="project-name">{p.name}</span>
-            )}
-            <span className="project-meta">{p.task_count}</span>
-            <div className="project-actions">
-              {editingId === p.id ? (
-                <>
-                  <button className="btn-icon" onClick={(e) => { e.stopPropagation(); handleRename(p.id); }}><Check size={13} /></button>
-                  <button className="btn-icon" onClick={(e) => { e.stopPropagation(); setEditingId(null); }}><X size={13} /></button>
-                </>
-              ) : (
-                <>
-                  <button className="btn-icon" onClick={(e) => { e.stopPropagation(); setEditingId(p.id); setEditName(p.name); }}><Edit2 size={13} /></button>
+              <div
+                className={`project-item ${p.id === activeProjectId ? "active" : ""}`}
+                onClick={() => { setActiveProject(p.id); if (window.innerWidth < 900) setSidebarOpen(false); }}
+              >
+                <span className="project-dot" style={{ background: p.colour }} />
+                <span className="project-name">{p.name}</span>
+                <span className="project-meta">{p.task_count}</span>
+                <div className="project-actions">
+                  <button className="btn-icon" onClick={(e) => { e.stopPropagation(); setEditingId(p.id); setEditName(p.name); setEditColour(p.colour || COLOURS[0]); }}><Edit2 size={13} /></button>
                   <button className="btn-icon danger" onClick={(e) => handleDelete(e, p.id)}><Trash2 size={13} /></button>
-                </>
-              )}
-            </div>
+                </div>
+              </div>
+            )}
           </div>
         ))}
         {projects.length === 0 && !creating && (

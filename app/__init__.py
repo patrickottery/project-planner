@@ -18,11 +18,13 @@ def create_app():
     from app.routes.tasks import tasks_bp
     from app.routes.notes import notes_bp
     from app.routes.attachments import attachments_bp
+    from app.routes.risks import risks_bp
 
     app.register_blueprint(projects_bp, url_prefix="/api/v1")
     app.register_blueprint(tasks_bp, url_prefix="/api/v1")
     app.register_blueprint(notes_bp, url_prefix="/api/v1")
     app.register_blueprint(attachments_bp, url_prefix="/api/v1")
+    app.register_blueprint(risks_bp, url_prefix="/api/v1")
 
     with app.app_context():
         db.create_all()

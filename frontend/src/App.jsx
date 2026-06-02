@@ -6,7 +6,7 @@ import MainArea from "./components/shared/MainArea";
 import "./App.css";
 
 export default function App() {
-  const { fetchProjects, activeProjectId, fetchTasks } = useStore();
+  const { fetchProjects, activeProjectId, fetchTasks, sidebarOpen, setSidebarOpen, toggleSidebar } = useStore();
 
   useEffect(() => {
     fetchProjects();
@@ -16,9 +16,18 @@ export default function App() {
     if (activeProjectId) fetchTasks(activeProjectId);
   }, [activeProjectId]);
 
+  // On narrow screens, close the sidebar by default on first load
+  useEffect(() => {
+    if (window.innerWidth < 900) setSidebarOpen(false);
+  }, []);
+
   return (
     <div className="app-layout">
       <Sidebar />
+      {/* Backdrop for mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div className="sidebar-backdrop" onClick={toggleSidebar} />
+      )}
       <MainArea />
       <Toaster
         position="bottom-right"

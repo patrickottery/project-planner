@@ -1,12 +1,13 @@
 import React from "react";
 import { useStore } from "../../store/useStore";
-import { LayoutList, BarChart2, LayoutDashboard } from "lucide-react";
+import { LayoutList, BarChart2, LayoutDashboard, ShieldAlert } from "lucide-react";
 import "./ViewTabs.css";
 
 const TABS = [
-  { id: "tree", label: "Tasks", Icon: LayoutList },
-  { id: "gantt", label: "Gantt", Icon: BarChart2 },
+  { id: "tree",      label: "Tasks",     Icon: LayoutList },
+  { id: "gantt",     label: "Gantt",     Icon: BarChart2 },
   { id: "dashboard", label: "Dashboard", Icon: LayoutDashboard },
+  { id: "risks",     label: "Risks",     Icon: ShieldAlert },
 ];
 
 export default function ViewTabs() {
@@ -18,9 +19,10 @@ export default function ViewTabs() {
           key={id}
           className={`view-tab ${activeView === id ? "active" : ""}`}
           onClick={() => setActiveView(id)}
+          title={label}
         >
           <Icon size={14} />
-          {label}
+          <span className="view-tab-label">{label}</span>
         </button>
       ))}
     </div>

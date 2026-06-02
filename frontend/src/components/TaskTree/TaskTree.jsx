@@ -5,7 +5,10 @@ import { api } from "../../api";
 import TaskRow from "./TaskRow";
 import TaskTreeToolbar from "./TaskTreeToolbar";
 import BulkActionBar from "./BulkActionBar";
+import ContextMenu from "./ContextMenu";
+import EditTaskModal from "./EditTaskModal";
 import "./TaskTree.css";
+import "./ContextMenu.css";
 
 function flattenTree(nodes, collapsed, depth = 0) {
   const result = [];
@@ -40,6 +43,31 @@ export default function TaskTree() {
   const [multiSelectActive, setMultiSelectActive] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [dragState, setDragState] = useState({ draggedId: null, overId: null, overPos: null });
+  const [contextMenu, setContextMenu] = useState(null); // { x, y, task }
+  const [editingTask, setEditingTask] = useState(null);
+
+  const ALL_COLS = ["assignee", "dates", "effort", "status", "progress"];
+  const COL_LABELS = { assignee: "Assignee", dates: "Start / End", effort: "Hours", status: "Status", progress: "Progress" };
+  const [visibleCols, setVisibleCols] = useState(new Set(ALL_COLS));
+  const [colMenu, setColMenu] = useState(null); // { x, y }
+  const colMenuRef = useRef(null);
+
+  useEffect(() => {
+    if (!colMenu) return;
+    const onDown = (e) => { if (!colMenuRef.current?.contains(e.target)) setColMenu(null); };
+    const onKey  = (e) => { if (e.key === "Escape") setColMenu(null); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown",   onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [colMenu]);
+
+  function toggleCol(key) {
+    setVisibleCols(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
 
   const flat = flattenTree(tasks, collapsed);
 
@@ -120,9 +148,9 @@ export default function TaskTree() {
 
   // ── Add / delete ──────────────────────────────────────────────────────────
 
-  async function handleAdd(parentId) {
+  async function handleAdd(parentId, task_type = "task") {
     try {
-      const t = await api.createTask(activeProjectId, { parent_id: parentId || null });
+      const t = await api.createTask(activeProjectId, { parent_id: parentId || null, task_type });
       await fetchTasks(activeProjectId);
       setActiveTask(t.id);
     } catch { toast.error("Failed to create task"); }
@@ -137,6 +165,33 @@ export default function TaskTree() {
       if (activeTaskId === taskId) setActiveTask(null);
       toast.success("Deleted", { duration: 1200 });
     } catch { toast.error("Failed to delete task"); }
+  }
+
+  // ── Context menu actions ──────────────────────────────────────────────────
+
+  function handleContextMenu(e, task) {
+    setContextMenu({ x: e.clientX, y: e.clientY, task });
+  }
+
+  async function handleCtxPromote(taskId) {
+    try {
+      await api.promoteTask(taskId);
+      await fetchTasks(activeProjectId);
+    } catch (err) { toast.error(err.message || "Cannot promote"); }
+  }
+
+  async function handleCtxDemote(taskId) {
+    try {
+      await api.demoteTask(taskId);
+      await fetchTasks(activeProjectId);
+    } catch (err) { toast.error(err.message || "Cannot demote"); }
+  }
+
+  async function handleChangeType(taskId, task_type) {
+    try {
+      await api.updateTask(taskId, { task_type });
+      await fetchTasks(activeProjectId);
+    } catch { toast.error("Failed to change type"); }
   }
 
   // ── Multi-select ──────────────────────────────────────────────────────────
@@ -217,8 +272,10 @@ export default function TaskTree() {
     } catch { toast.error("Failed to reorder"); }
   }
 
+  const hideCls = ALL_COLS.filter(c => !visibleCols.has(c)).map(c => `hide-col-${c}`).join(" ");
+
   return (
-    <div className="task-tree">
+    <div className={`task-tree ${hideCls}`}>
       <TaskTreeToolbar
         onAdd={() => handleAdd(null)}
         filter={filter}
@@ -235,6 +292,43 @@ export default function TaskTree() {
           onClear={() => setSelectedIds(new Set())}
         />
       )}
+      {/* Column headers — right-click to toggle column visibility */}
+      <div
+        className="tree-header-row"
+        onContextMenu={(e) => { e.preventDefault(); setColMenu({ x: e.clientX, y: e.clientY }); }}
+        title="Right-click to show/hide columns"
+      >
+        {multiSelectActive && <span className="row-checkbox" style={{ visibility: "hidden" }} />}
+        <span style={{ width: 12, flexShrink: 0 }} />
+        <div style={{ width: 0 }} />
+        <span style={{ width: 20, flexShrink: 0 }} />
+        <span style={{ width: 92, flexShrink: 0 }} /> {/* actions column */}
+        <span style={{ width: 13, flexShrink: 0 }} />
+        <div className="row-title header-label">Task</div>
+        <div className="row-fields" style={{ gap: 4 }}>
+          <span className="col-assignee header-label">Assignee</span>
+          <span className="col-dates header-label" style={{ justifyContent: "space-around" }}>
+            <span>Start</span><span style={{ color: "var(--text-muted)" }}>–</span><span>End</span>
+          </span>
+          <span className="col-effort header-label">Hrs</span>
+          <span className="col-status header-label">Status</span>
+          <span className="col-progress header-label">Progress</span>
+          <span className="col-badges" />
+        </div>
+      </div>
+
+      {colMenu && (
+        <div className="col-vis-menu" style={{ left: colMenu.x, top: colMenu.y }} ref={colMenuRef}>
+          <span className="ctx-label">Show columns</span>
+          {ALL_COLS.map(key => (
+            <button key={key} className="ctx-item" onClick={() => toggleCol(key)}>
+              <span className={`col-vis-check ${visibleCols.has(key) ? "checked" : ""}`} />
+              {COL_LABELS[key]}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="task-tree-scroll">
         {filtered.length === 0 ? (
           <div className="tree-empty">
@@ -260,6 +354,7 @@ export default function TaskTree() {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onDragEnd={handleDragEnd}
+              onContextMenu={handleContextMenu}
             />
           ))
         )}
@@ -267,6 +362,27 @@ export default function TaskTree() {
       <div className="tree-shortcuts-hint">
         Tab — indent · Shift+Tab — outdent · Enter — add sibling · ↑↓ — navigate · Ctrl+Z — undo
       </div>
+
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          task={contextMenu.task}
+          onClose={() => setContextMenu(null)}
+          onAddSubtask={handleAdd}
+          onPromote={handleCtxPromote}
+          onDemote={handleCtxDemote}
+          onChangeType={handleChangeType}
+          onEdit={(task) => setEditingTask(task)}
+        />
+      )}
+
+      {editingTask && (
+        <EditTaskModal
+          task={editingTask}
+          onClose={() => setEditingTask(null)}
+        />
+      )}
     </div>
   );
 }
