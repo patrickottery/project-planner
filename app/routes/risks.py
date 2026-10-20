@@ -12,6 +12,10 @@ VALID_IMPACTS      = {"low", "medium", "high", "critical"}
 VALID_PROBS        = {"low", "medium", "high"}
 
 
+def statuses_for(entry_type):
+    return VALID_RISK_STATUSES if entry_type == "risk" else VALID_ISSUE_STATUSES
+
+
 def _bad(msg):
     abort(400, description=msg)
 
@@ -32,7 +36,7 @@ def _validate(data, entry_type=None):
     if etype not in VALID_ENTRY_TYPES:
         _bad(f"'entry_type' must be one of: {', '.join(sorted(VALID_ENTRY_TYPES))}")
 
-    valid_statuses = VALID_RISK_STATUSES if etype == "risk" else VALID_ISSUE_STATUSES
+    valid_statuses = statuses_for(etype)
     if "status" in data and data["status"] not in valid_statuses:
         _bad(f"'status' must be one of: {', '.join(sorted(valid_statuses))}")
 
@@ -50,14 +54,14 @@ def bad_request(e):
 
 @risks_bp.route("/projects/<pid>/risks", methods=["GET"])
 def list_risks(pid):
-    Project.query.get_or_404(pid)
+    db.get_or_404(Project, pid)
     items = RiskIssue.query.filter_by(project_id=pid).order_by(RiskIssue.created_at.desc()).all()
     return jsonify([r.to_dict() for r in items])
 
 
 @risks_bp.route("/projects/<pid>/risks", methods=["POST"])
 def create_risk(pid):
-    Project.query.get_or_404(pid)
+    db.get_or_404(Project, pid)
     data = request.get_json(silent=True) or {}
     _validate(data)
     r = RiskIssue(
@@ -80,7 +84,7 @@ def create_risk(pid):
 
 @risks_bp.route("/risks/<rid>", methods=["PUT"])
 def update_risk(rid):
-    r = RiskIssue.query.get_or_404(rid)
+    r = db.get_or_404(RiskIssue, rid)
     data = request.get_json(silent=True) or {}
     _validate(data, entry_type=data.get("entry_type", r.entry_type))
     for field in ("entry_type", "description", "status", "impact", "probability", "owner", "response"):
@@ -98,7 +102,7 @@ def update_risk(rid):
 
 @risks_bp.route("/risks/<rid>", methods=["DELETE"])
 def delete_risk(rid):
-    r = RiskIssue.query.get_or_404(rid)
+    r = db.get_or_404(RiskIssue, rid)
     db.session.delete(r)
     db.session.commit()
     return "", 204

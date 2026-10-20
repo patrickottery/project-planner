@@ -22,6 +22,7 @@ class Project(db.Model):
     updated_at = db.Column(db.DateTime, default=now, onupdate=now)
 
     tasks = db.relationship("Task", backref="project", cascade="all, delete-orphan", lazy="dynamic")
+    risks = db.relationship("RiskIssue", backref="project", cascade="all, delete-orphan", lazy="dynamic")
 
     def to_dict(self):
         tasks = list(self.tasks)
