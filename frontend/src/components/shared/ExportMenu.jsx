@@ -39,9 +39,16 @@ export default function ExportMenu() {
       const newProject = await api.importJson(data);
       await fetchProjects();
       setActiveProject(newProject.id);
-      toast.success(`Imported "${newProject.name}"`);
+      const s = newProject.import_summary || {};
+      toast.success(
+        `Imported "${newProject.name}": ${s.tasks ?? 0} tasks, ${s.notes ?? 0} notes, ${s.risks ?? 0} risks/issues.` +
+          (s.attachments_skipped
+            ? ` ${s.attachments_skipped} attachment file(s) were not restored — JSON exports hold only their names.`
+            : ""),
+        { duration: s.attachments_skipped ? 9000 : 4000 }
+      );
     } catch (err) {
-      toast.error("Import failed — check the file format");
+      toast.error(err.status === 400 ? `Import failed: ${err.message}` : "Import failed — check the file format");
     }
     e.target.value = "";
   }
@@ -60,6 +67,7 @@ export default function ExportMenu() {
           <button onClick={handleExportJson}>
             <Download size={13} /> Export JSON
           </button>
+          <div className="export-hint">Attachment files aren't included — only their names</div>
           <button onClick={handleExportCsv}>
             <Download size={13} /> Export CSV
           </button>

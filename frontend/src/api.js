@@ -18,6 +18,8 @@ async function req(method, path, body, isFormData = false) {
 }
 
 export const api = {
+  me: () => req("GET", "/me"),
+
   // Projects
   getProjects: () => req("GET", "/projects"),
   createProject: (data) => req("POST", "/projects", data),

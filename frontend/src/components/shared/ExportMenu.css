@@ -45,3 +45,9 @@
   background: var(--border);
   margin: 2px 0;
 }
+
+.export-hint {
+  padding: 0 12px 6px 33px;
+  font-size: 11px;
+  color: #94a3b8;
+}

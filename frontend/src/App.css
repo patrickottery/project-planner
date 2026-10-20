@@ -19,3 +19,26 @@
     z-index: 150;
   }
 }
+
+/* Non-prod marker (APP_ENV != prod) */
+.env-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+  background: repeating-linear-gradient(-45deg, #f97316 0 14px, #ea580c 14px 28px);
+}
+.app-layout.has-env-banner {
+  padding-top: 24px;
+  box-sizing: border-box;
+}

@@ -245,10 +245,17 @@ export default function TaskRow({
 
       {showDeleteMenu && (
         <div className="delete-menu" onClick={(e) => e.stopPropagation()}>
-          <p>Delete children too?</p>
+          <p>
+            Delete “{task.title}”{hasChildren ? " and its subtasks" : ""}? Its notes and
+            attachments go too. <strong>This can't be undone.</strong>
+          </p>
           <div className="delete-menu-actions">
-            <button className="btn-danger" onClick={() => { setShowDeleteMenu(false); onDelete(task.id, true); }}>Delete all</button>
-            <button className="btn-ghost" onClick={() => { setShowDeleteMenu(false); onDelete(task.id, false); }}>Keep children</button>
+            <button className="btn-danger" onClick={() => { setShowDeleteMenu(false); onDelete(task.id, true); }}>
+              {hasChildren ? "Delete with subtasks" : "Delete"}
+            </button>
+            {hasChildren && (
+              <button className="btn-ghost" onClick={() => { setShowDeleteMenu(false); onDelete(task.id, false); }}>Delete, keep subtasks</button>
+            )}
             <button className="btn-ghost" onClick={() => setShowDeleteMenu(false)}>Cancel</button>
           </div>
         </div>

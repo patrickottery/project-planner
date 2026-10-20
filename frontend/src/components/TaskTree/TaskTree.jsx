@@ -134,8 +134,6 @@ export default function TaskTree() {
           if (action.type === "move") {
             await api.moveTask(action.taskId, { parent_id: action.parent_id, position: action.position });
             setActiveTask(action.taskId);
-          } else if (action.type === "delete") {
-            await api.createTask(action.task.project_id, action.task);
           }
           await fetchTasks(pid);
           toast.success("Undone", { duration: 1200 });
@@ -156,9 +154,9 @@ export default function TaskTree() {
     } catch { toast.error("Failed to create task"); }
   }
 
+  // Deletes are confirmed in TaskRow's delete menu and are NOT undoable: a re-created
+  // task would get a new id and lose its subtasks, notes, attachments and dependencies.
   async function handleDelete(taskId, cascade) {
-    const taskToDelete = flat.find((t) => t.id === taskId);
-    if (taskToDelete) pushUndo({ type: "delete", task: { ...taskToDelete } });
     try {
       await api.deleteTask(taskId, cascade);
       await fetchTasks(activeProjectId);

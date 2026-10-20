@@ -1,6 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Toaster } from "react-hot-toast";
 import { useStore } from "./store/useStore";
+import { api } from "./api";
 import Sidebar from "./components/shared/Sidebar";
 import MainArea from "./components/shared/MainArea";
 import "./App.css";
@@ -12,6 +13,19 @@ export default function App() {
     fetchProjects();
   }, []);
 
+  // Non-prod copies must look unmistakably different: banner, tab title, favicon.
+  const [env, setEnv] = useState(null);
+  useEffect(() => {
+    api.me().then((me) => setEnv(me.env || "dev")).catch(() => setEnv("unknown"));
+  }, []);
+  const envLabel = env && env !== "prod" ? (env === "uat" ? "TEST" : env.toUpperCase()) : null;
+  useEffect(() => {
+    if (!envLabel) return;
+    document.title = `${envLabel} · Project Planner`;
+    const icon = document.querySelector('link[rel="icon"]');
+    if (icon) icon.href = "/favicon-dev.svg";
+  }, [envLabel]);
+
   useEffect(() => {
     if (activeProjectId) fetchTasks(activeProjectId);
   }, [activeProjectId]);
@@ -22,7 +36,8 @@ export default function App() {
   }, []);
 
   return (
-    <div className="app-layout">
+    <div className={`app-layout${envLabel ? " has-env-banner" : ""}`}>
+      {envLabel && <div className="env-banner">{envLabel} copy (APP_ENV={env}) — not the real planner</div>}
       <Sidebar />
       {/* Backdrop for mobile sidebar overlay */}
       {sidebarOpen && (
