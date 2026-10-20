@@ -1,0 +1,8 @@
+# Dev only: copy to docker-compose.override.yml (gitignored).
+services:
+  project-planner:
+    networks: !reset []              # dev is loopback-only — not on the tunnel network
+    volumes:
+      - ./app:/app/app
+      - ./config.py:/app/config.py
+      - ./run.py:/app/run.py

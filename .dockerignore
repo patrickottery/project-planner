@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+secrets
+docker-compose.override.yml
+*.bak*
+node_modules
+frontend/node_modules
+app/static/dist
+.venv
+tests
+__pycache__
+*.pyc
+.pytest_cache
+.git
+.claude
+*.log
